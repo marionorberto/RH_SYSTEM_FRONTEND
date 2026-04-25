@@ -5,8 +5,6 @@ import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
 import { AuthProvider } from "./context/AuthContext";
-import RiskAlerts from "./pages/RiskAlerts";
-import PatientDetails from "./pages/PatientDetails";
 import CompanyProfile from "./pages/company-profile/company-profile";
 import UserList from "./pages/users/UserList";
 import CreateUser from "./pages/users/CreateUser";
@@ -26,6 +24,11 @@ import PayrollProcessing from "./pages/Payroll/PayrollProcessing";
 import CompanyConfig from "./pages/Configurations/Company";
 import SystemLogs from "./pages/Logs/SystemLogs";
 import GeneralSettings from "./pages/Settings/GeneralSettings";
+import EmployeeProfile from "./pages/EmployeeProfile/EmployeeProfile";
+import PersonalFinance from "./pages/PersonalFinance/PersonalFinance";
+import SalarySimulator from "./pages/SalarySimulator/SalarySimulator";
+import Calendar from "./pages/Calendar";
+import CompanyCalendar from "./components/CompanyCalendar/CompanyCalendar";
 
 export default function App() {
   return (
@@ -40,6 +43,19 @@ export default function App() {
           <Route element={<AppLayout />}>
             <Route index path="/" element={<Home />} />
             <Route path="/profile" element={<CompanyProfile />} />
+
+            <Route path="/employee/profile" element={<EmployeeProfile />} />
+            <Route
+              path="/employee/personal-finance"
+              element={<PersonalFinance />}
+            />
+
+            <Route
+              path="/employee/salary-simulator"
+              element={<SalarySimulator />}
+            />
+
+            <Route path="/calendary" element={<CompanyCalendar />} />
 
             <Route path="/users/create" element={<CreateUser />} />
             <Route path="/users/list" element={<UserList />} />

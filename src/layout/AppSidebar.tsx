@@ -32,6 +32,29 @@ const navItems: NavItem[] = [
     path: "/profile",
   },
   {
+    icon: <UserCircleIcon />,
+    name: "Dados Pessoais",
+    path: "/employee/profile",
+  },
+  {
+    icon: <UserCircleIcon />,
+    name: "Finanças Pessoais",
+    path: "/employee/personal-finance",
+  },
+
+  {
+    icon: <UserCircleIcon />,
+    name: "Simulador",
+    path: "/employee/salary-simulator",
+  },
+
+  {
+    icon: <UserCircleIcon />,
+    name: "Calendário",
+    path: "/calendary",
+  },
+
+  {
     icon: <UserIcon />,
     name: "Conta de Usuários",
     subItems: [
