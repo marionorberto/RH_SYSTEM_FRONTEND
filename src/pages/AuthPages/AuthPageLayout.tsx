@@ -26,7 +26,7 @@ export default function AuthLayout({
                 />
               </Link>
               <p className="text-center text-gray-400 dark:text-white/60">
-                Administre os dados nutricionais com cuidado
+                Administre os dados dos seus funcionários com maestria.
               </p>
             </div>
           </div>

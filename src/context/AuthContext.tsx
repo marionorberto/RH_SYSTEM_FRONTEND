@@ -14,6 +14,7 @@ interface User {
   email: string;
   firstname: string;
   lastname: string;
+  role: string;
   roles?: string[];
 }
 
@@ -92,6 +93,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const userId = loginResponse.data.userId;
       const username = loginResponse.data.username;
       const userEmail = loginResponse.data.email;
+      const role = loginResponse.data.role;
 
       if (!token) {
         throw new Error("Token não recebido do servidor");
@@ -121,6 +123,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         email: userEmail || userData.email,
         firstname: userData.firstname,
         lastname: userData.lastname,
+        role: role,
       };
 
       localStorage.setItem("@rh:user", JSON.stringify(userInfo));

@@ -24,18 +24,7 @@ const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
     name: "Dashboard",
-    subItems: [{ name: "Página Inicial", path: "/", pro: false }],
-  },
-  {
-    icon: <UserCircleIcon />,
-    name: "Dados Empresa",
-    path: "/profile",
-  },
-
-  {
-    icon: <UserCircleIcon />,
-    name: "Home Employee",
-    path: "/home-employee",
+    subItems: [{ name: "Página Inicial", path: "/home-employee", pro: false }],
   },
 
   {
@@ -62,68 +51,9 @@ const navItems: NavItem[] = [
   },
 
   {
-    icon: <UserIcon />,
-    name: "Conta de Usuários",
-    subItems: [
-      { name: "Adicionar Novo", path: "/users/create", pro: false },
-      { name: "Listar Contas", path: "/users/list", pro: false },
-      // { name: "Prompts Activos", path: "/actives-prompts", pro: false },
-    ],
-  },
-  {
-    icon: <UserIcon />,
-    name: "Departamentos",
-    subItems: [
-      { name: "Adicionar Novo", path: "/departaments/create", pro: false },
-      { name: "Listar Dep.", path: "/departaments/list", pro: false },
-      { name: "Editar Dep.", path: "/departaments/edit", pro: false },
-      // { name: "Prompts Activos", path: "/actives-prompts", pro: false },
-    ],
-  },
-  {
-    name: "Cargos",
-    icon: <BoxCubeIcon />,
-    subItems: [
-      { name: "Adicionar Novo", path: "/functions/create", pro: false },
-      { name: "Listar", path: "/functions/list", pro: false },
-    ],
-  },
-  {
-    icon: <PieChartIcon />,
-    name: "Funcionários",
-    subItems: [
-      { name: "Adicionar Novo", path: "/employee/create", pro: false },
-      { name: "Listar", path: "/employee/list", pro: false },
-      // { name: "Prompts Activos", path: "/actives-prompts", pro: false },
-    ],
-  },
-  {
-    icon: <PieChartIcon />,
-    name: "Remunerações",
-    subItems: [
-      { name: "Adicionar Novo", path: "/remunerations/create", pro: false },
-      { name: "Listar", path: "/remunerations/list", pro: false },
-      // { name: "Prompts Activos", path: "/actives-prompts", pro: false },
-    ],
-  },
-  {
-    icon: <PieChartIcon />,
-    name: "Descontos",
-    subItems: [
-      { name: "Adicionar Novo", path: "/discounts/create", pro: false },
-      { name: "Listar", path: "/discounts/list", pro: false },
-      // { name: "Prompts Activos", path: "/actives-prompts", pro: false },
-    ],
-  },
-  {
     icon: <PieChartIcon />,
     name: "Efectividade",
     path: "/efectivity",
-  },
-  {
-    icon: <PieChartIcon />,
-    name: "Processamento Salarial",
-    path: "/payroll",
   },
 ];
 

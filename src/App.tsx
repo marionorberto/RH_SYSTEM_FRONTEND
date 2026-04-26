@@ -27,8 +27,9 @@ import GeneralSettings from "./pages/Settings/GeneralSettings";
 import EmployeeProfile from "./pages/EmployeeProfile/EmployeeProfile";
 import PersonalFinance from "./pages/PersonalFinance/PersonalFinance";
 import SalarySimulator from "./pages/SalarySimulator/SalarySimulator";
-import Calendar from "./pages/Calendar";
 import CompanyCalendar from "./components/CompanyCalendar/CompanyCalendar";
+import EmployeeDashboard from "./pages/DashboardEmployee/Home";
+import AppLayoutEmployee from "./layout/AppLayoutEmployee";
 
 export default function App() {
   return (
@@ -43,6 +44,8 @@ export default function App() {
           <Route element={<AppLayout />}>
             <Route index path="/" element={<Home />} />
             <Route path="/profile" element={<CompanyProfile />} />
+
+            <Route path="/home-employee" element={<EmployeeDashboard />} />
 
             <Route path="/employee/profile" element={<EmployeeProfile />} />
             <Route
@@ -89,6 +92,11 @@ export default function App() {
             <Route path="/company-issue" element={<CompanyConfig />} />
             <Route path="/logs" element={<SystemLogs />} />
             <Route path="/config/geral" element={<GeneralSettings />} />
+          </Route>
+
+          <Route element={<AppLayoutEmployee />}>
+            <Route index path="/" element={<Home />} />
+            <Route path="/profile" element={<CompanyProfile />} />
           </Route>
 
           {/* Rota 404 */}

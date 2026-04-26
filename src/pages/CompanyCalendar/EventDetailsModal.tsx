@@ -1,7 +1,7 @@
 // src/components/CompanyCalendar/EventDetailsModal.tsx
-import { Modal } from "../ui/modal";
-import Button from "../ui/button/Button";
-import Badge from "../ui/badge/Badge";
+import { Modal } from "../../components/ui/modal";
+import Button from "../../components/ui/button/Button";
+import Badge from "../../components/ui/badge/Badge";
 
 interface EventDetailsModalProps {
   isOpen: boolean;

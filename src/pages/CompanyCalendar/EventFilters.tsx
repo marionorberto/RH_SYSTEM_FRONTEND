@@ -1,6 +1,6 @@
 // src/components/CompanyCalendar/EventFilters.tsx
 import { useState } from "react";
-import { MagnifyingGlassIcon } from "../../icons";
+import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 
 interface EventFiltersProps {
   filters: {
