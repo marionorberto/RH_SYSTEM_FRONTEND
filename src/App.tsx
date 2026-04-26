@@ -30,7 +30,10 @@ import SalarySimulator from "./pages/SalarySimulator/SalarySimulator";
 import CompanyCalendar from "./components/CompanyCalendar/CompanyCalendar";
 import EmployeeDashboard from "./pages/DashboardEmployee/Home";
 import AppLayoutEmployee from "./layout/AppLayoutEmployee";
+import { ProtectedRoute } from "./components/ProtectedRoute";
+import { RoleBasedRedirect } from "./components/RoleBasedRedirect";
 
+// frontend/src/App.tsx
 export default function App() {
   return (
     <AuthProvider>
@@ -40,63 +43,71 @@ export default function App() {
           {/* Rota pública de login */}
           <Route path="/signin" element={<SignIn />} />
 
-          {/* Rotas protegidas - AppLayout já verifica autenticação */}
-          <Route element={<AppLayout />}>
-            <Route index path="/" element={<Home />} />
-            <Route path="/profile" element={<CompanyProfile />} />
+          {/* Redirecionamento baseado na role */}
+          <Route path="/" element={<RoleBasedRedirect />} />
 
-            <Route path="/home-employee" element={<EmployeeDashboard />} />
-
-            <Route path="/employee/profile" element={<EmployeeProfile />} />
+          {/* Rotas protegidas - ADMIN e RH */}
+          <Route
+            path="/dashboard" // ← path base para admin
+            element={
+              <ProtectedRoute allowedRoles={["admin", "rh"]}>
+                <AppLayout />
+              </ProtectedRoute>
+            }
+          >
+            {/* Usar paths relativos (sem a barra no início) */}
+            <Route index element={<Home />} /> {/* /dashboard */}
+            <Route path="profile" element={<CompanyProfile />} />{" "}
+            {/* /dashboard/profile */}
+            <Route path="calendary" element={<CompanyCalendar />} />
+            {/* Users */}
+            <Route path="users/create" element={<CreateUser />} />
+            <Route path="users/list" element={<UserList />} />
+            {/* Departamentos */}
+            <Route path="departaments/create" element={<CreateDepartament />} />
+            <Route path="departaments/list" element={<DepartamentList />} />
+            <Route path="departaments/edit" element={<EditDepartament />} />
+            {/* Employees */}
+            <Route path="employee/list" element={<EmployeeList />} />
+            <Route path="employee/create" element={<CreateEmployee />} />
+            {/* Functions */}
+            <Route path="functions/list" element={<FunctionList />} />
+            <Route path="functions/create" element={<CreateFunction />} />
+            {/* Remunerations */}
+            <Route path="remunerations/list" element={<RemunerationList />} />
             <Route
-              path="/employee/personal-finance"
-              element={<PersonalFinance />}
-            />
-
-            <Route
-              path="/employee/salary-simulator"
-              element={<SalarySimulator />}
-            />
-
-            <Route path="/calendary" element={<CompanyCalendar />} />
-
-            <Route path="/users/create" element={<CreateUser />} />
-            <Route path="/users/list" element={<UserList />} />
-
-            <Route
-              path="/departaments/create"
-              element={<CreateDepartament />}
-            />
-            <Route path="/departaments/list" element={<DepartamentList />} />
-            <Route path="/departaments/edit" element={<EditDepartament />} />
-
-            <Route path="/employee/list" element={<EmployeeList />} />
-            <Route path="/employee/create" element={<CreateEmployee />} />
-
-            <Route path="/functions/list" element={<FunctionList />} />
-            <Route path="/functions/create" element={<CreateFunction />} />
-
-            <Route path="/remunerations/list" element={<RemunerationList />} />
-            <Route
-              path="/remunerations/create"
+              path="remunerations/create"
               element={<CreateRemuneration />}
             />
-
-            <Route path="/discounts/list" element={<DiscountList />} />
-            <Route path="/discounts/create" element={<CreateDiscount />} />
-
-            <Route path="/effectiveness" element={<Effectiveness />} />
-
-            <Route path="/payroll/" element={<PayrollProcessing />} />
-
-            <Route path="/company-issue" element={<CompanyConfig />} />
-            <Route path="/logs" element={<SystemLogs />} />
-            <Route path="/config/geral" element={<GeneralSettings />} />
+            {/* Discounts */}
+            <Route path="discounts/list" element={<DiscountList />} />
+            <Route path="discounts/create" element={<CreateDiscount />} />
+            {/* Others */}
+            <Route path="effectiveness" element={<Effectiveness />} />
+            <Route path="payroll" element={<PayrollProcessing />} />
+            <Route path="company-issue" element={<CompanyConfig />} />
+            <Route path="logs" element={<SystemLogs />} />
+            <Route path="config/geral" element={<GeneralSettings />} />
           </Route>
 
-          <Route element={<AppLayoutEmployee />}>
-            <Route index path="/" element={<Home />} />
-            <Route path="/profile" element={<CompanyProfile />} />
+          {/* Rotas protegidas - FUNCIONÁRIO */}
+          <Route
+            path="/employee" // ← path base para funcionário
+            element={
+              <ProtectedRoute allowedRoles={["funcionario"]}>
+                <AppLayoutEmployee />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<EmployeeDashboard />} /> {/* /employee */}
+            <Route path="dashboard" element={<EmployeeDashboard />} />{" "}
+            {/* /employee/dashboard */}
+            <Route path="profile" element={<EmployeeProfile />} />{" "}
+            {/* /employee/profile */}
+            <Route path="personal-finance" element={<PersonalFinance />} />{" "}
+            {/* /employee/personal-finance */}
+            <Route path="salary-simulator" element={<SalarySimulator />} />{" "}
+            {/* /employee/salary-simulator */}
           </Route>
 
           {/* Rota 404 */}

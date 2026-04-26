@@ -20,13 +20,13 @@ type NavItem = {
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
 
+// frontend/src/components/AppSidebarEmployee.tsx
 const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
     name: "Dashboard",
-    subItems: [{ name: "Página Inicial", path: "/home-employee", pro: false }],
+    path: "/employee/dashboard", // ← com /employee
   },
-
   {
     icon: <UserCircleIcon />,
     name: "Dados Pessoais",
@@ -37,23 +37,15 @@ const navItems: NavItem[] = [
     name: "Finanças Pessoais",
     path: "/employee/personal-finance",
   },
-
   {
     icon: <UserCircleIcon />,
     name: "Simulador",
     path: "/employee/salary-simulator",
   },
-
   {
     icon: <UserCircleIcon />,
     name: "Calendário",
-    path: "/calendary",
-  },
-
-  {
-    icon: <PieChartIcon />,
-    name: "Efectividade",
-    path: "/efectivity",
+    path: "/dashboard/calendary", // ← calendário é admin? ou funcionário?
   },
 ];
 

@@ -20,110 +20,96 @@ type NavItem = {
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
 
+// frontend/src/components/AppSidebar.tsx - Corrigir paths
 const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
     name: "Dashboard",
-    subItems: [{ name: "Página Inicial", path: "/", pro: false }],
+    path: "/dashboard", // ← path direto
   },
   {
     icon: <UserCircleIcon />,
     name: "Dados Empresa",
-    path: "/profile",
+    path: "/dashboard/profile", // ← com /dashboard
   },
-
-  {
-    icon: <UserCircleIcon />,
-    name: "Home Employee",
-    path: "/home-employee",
-  },
-
-  {
-    icon: <UserCircleIcon />,
-    name: "Dados Pessoais",
-    path: "/employee/profile",
-  },
-  {
-    icon: <UserCircleIcon />,
-    name: "Finanças Pessoais",
-    path: "/employee/personal-finance",
-  },
-
-  {
-    icon: <UserCircleIcon />,
-    name: "Simulador",
-    path: "/employee/salary-simulator",
-  },
-
-  {
-    icon: <UserCircleIcon />,
-    name: "Calendário",
-    path: "/calendary",
-  },
-
   {
     icon: <UserIcon />,
     name: "Conta de Usuários",
     subItems: [
-      { name: "Adicionar Novo", path: "/users/create", pro: false },
-      { name: "Listar Contas", path: "/users/list", pro: false },
-      // { name: "Prompts Activos", path: "/actives-prompts", pro: false },
+      { name: "Adicionar Novo", path: "/dashboard/users/create", pro: false },
+      { name: "Listar Contas", path: "/dashboard/users/list", pro: false },
     ],
   },
   {
     icon: <UserIcon />,
     name: "Departamentos",
     subItems: [
-      { name: "Adicionar Novo", path: "/departaments/create", pro: false },
-      { name: "Listar Dep.", path: "/departaments/list", pro: false },
-      { name: "Editar Dep.", path: "/departaments/edit", pro: false },
-      // { name: "Prompts Activos", path: "/actives-prompts", pro: false },
+      {
+        name: "Adicionar Novo",
+        path: "/dashboard/departaments/create",
+        pro: false,
+      },
+      { name: "Listar Dep.", path: "/dashboard/departaments/list", pro: false },
+      { name: "Editar Dep.", path: "/dashboard/departaments/edit", pro: false },
     ],
   },
   {
     name: "Cargos",
     icon: <BoxCubeIcon />,
     subItems: [
-      { name: "Adicionar Novo", path: "/functions/create", pro: false },
-      { name: "Listar", path: "/functions/list", pro: false },
+      {
+        name: "Adicionar Novo",
+        path: "/dashboard/functions/create",
+        pro: false,
+      },
+      { name: "Listar", path: "/dashboard/functions/list", pro: false },
     ],
   },
   {
     icon: <PieChartIcon />,
     name: "Funcionários",
     subItems: [
-      { name: "Adicionar Novo", path: "/employee/create", pro: false },
-      { name: "Listar", path: "/employee/list", pro: false },
-      // { name: "Prompts Activos", path: "/actives-prompts", pro: false },
+      {
+        name: "Adicionar Novo",
+        path: "/dashboard/employee/create",
+        pro: false,
+      },
+      { name: "Listar", path: "/dashboard/employee/list", pro: false },
     ],
   },
   {
     icon: <PieChartIcon />,
     name: "Remunerações",
     subItems: [
-      { name: "Adicionar Novo", path: "/remunerations/create", pro: false },
-      { name: "Listar", path: "/remunerations/list", pro: false },
-      // { name: "Prompts Activos", path: "/actives-prompts", pro: false },
+      {
+        name: "Adicionar Novo",
+        path: "/dashboard/remunerations/create",
+        pro: false,
+      },
+      { name: "Listar", path: "/dashboard/remunerations/list", pro: false },
     ],
   },
   {
     icon: <PieChartIcon />,
     name: "Descontos",
     subItems: [
-      { name: "Adicionar Novo", path: "/discounts/create", pro: false },
-      { name: "Listar", path: "/discounts/list", pro: false },
-      // { name: "Prompts Activos", path: "/actives-prompts", pro: false },
+      {
+        name: "Adicionar Novo",
+        path: "/dashboard/discounts/create",
+        pro: false,
+      },
+      { name: "Listar", path: "/dashboard/discounts/list", pro: false },
     ],
   },
   {
     icon: <PieChartIcon />,
     name: "Efectividade",
-    path: "/efectivity",
+    path: "/dashboard/effectiveness",
   },
   {
     icon: <PieChartIcon />,
     name: "Processamento Salarial",
-    path: "/payroll",
+    path: "/dashboard/payroll",
   },
 ];
 
@@ -132,15 +118,13 @@ const othersItems: NavItem[] = [
     icon: <PieChartIcon />,
     name: "Configurações",
     subItems: [
+      { name: "Empresa", path: "/dashboard/company-issue", pro: false },
+      { name: "Logs", path: "/dashboard/logs", pro: false },
       {
-        name: "Empresa",
-        path: "/company-issue",
+        name: "Configurações Gerais",
+        path: "/dashboard/config/geral",
         pro: false,
       },
-
-      { name: "Logs", path: "/logs", pro: false },
-      { name: "Configurações Gerais", path: "/config/geral", pro: false },
-      // { name: "Prompts Activos", path: "/actives-prompts", pro: false },
     ],
   },
 ];
