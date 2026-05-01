@@ -15,7 +15,6 @@ interface UseUsersReturn {
   statusFilter: string;
   setStatusFilter: (status: string) => void;
   fetchUsers: () => Promise<void>;
-  refreshUsers: () => Promise<void>;
   createUser: (data: ICreateUserData) => Promise<IUser | null>;
   updateUser: (data: IUpdateUserData) => Promise<IUser | null>;
   deleteUser: (id: string) => Promise<boolean>;
@@ -26,8 +25,6 @@ interface UseUsersReturn {
     active: number;
     inactive: number;
     admins: number;
-    rh: number;
-    funcionarios: number;
   };
 }
 
@@ -45,29 +42,14 @@ export const useUsers = (): UseUsersReturn => {
       setLoading(true);
       setError(null);
       const data = await userService.getAllUsers();
-      
-      // Normalizar os dados dos usuários
-      const normalizedUsers = (data || []).map(user => ({
-        ...user,
-        // Garantir que o role está em minúsculo para comparação consistente
-        role: user.role?.toLowerCase() || 'funcionario',
-        // Criar nome completo para busca
-        fullName: `${user.firstname} ${user.lastname}`.toLowerCase(),
-      }));
-      
-      setUsers(normalizedUsers);
+      setUsers(data);
     } catch (err: any) {
       setError(err.message || 'Erro ao carregar usuários');
       toast.error('Erro ao carregar usuários');
-      setUsers([]);
     } finally {
       setLoading(false);
     }
   }, []);
-
-  const refreshUsers = useCallback(async () => {
-    await fetchUsers();
-  }, [fetchUsers]);
 
   const createUser = useCallback(async (data: ICreateUserData): Promise<IUser | null> => {
     try {
@@ -139,7 +121,8 @@ export const useUsers = (): UseUsersReturn => {
 
   const resetPassword = useCallback(async (userId: string, newPassword: string): Promise<boolean> => {
     try {
-      setLoading(true);
+      // Nota: Implementar endpoint específico para reset de senha no backend
+      // Por enquanto, usando o updatePassword
       await userService.updatePassword('', newPassword);
       toast.success('Senha resetada com sucesso!');
       return true;
@@ -148,8 +131,6 @@ export const useUsers = (): UseUsersReturn => {
       setError(errorMsg);
       toast.error(errorMsg);
       return false;
-    } finally {
-      setLoading(false);
     }
   }, []);
 
@@ -157,24 +138,19 @@ export const useUsers = (): UseUsersReturn => {
   useEffect(() => {
     let filtered = [...users];
 
-    // Filtro de busca - usando nome completo, email ou username
+    // Filtro de busca
     if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase();
       filtered = filtered.filter(
         (user) =>
-          `${user.firstname} ${user.lastname}`.toLowerCase().includes(searchLower) ||
-          user.email.toLowerCase().includes(searchLower) ||
-          user.username.toLowerCase().includes(searchLower)
+          `${user.firstname} ${user.lastname}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          user.username.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
-    // Filtro de role - comparando em minúsculo
+    // Filtro de role
     if (roleFilter !== 'all') {
-      filtered = filtered.filter((user) => {
-        const userRole = user.role?.toLowerCase();
-        const filterRole = roleFilter.toLowerCase();
-        return userRole === filterRole;
-      });
+      filtered = filtered.filter((user) => user.role === roleFilter);
     }
 
     // Filtro de status
@@ -188,13 +164,13 @@ export const useUsers = (): UseUsersReturn => {
   }, [searchTerm, roleFilter, statusFilter, users]);
 
   // Estatísticas
+// frontend/src/hooks/useUsers.ts (parte das estatísticas)
+  // Estatísticas - garantir que sempre retorna um objeto válido
   const statistics = {
-    total: users.length,
-    active: users.filter((u) => u.active).length,
-    inactive: users.filter((u) => !u.active).length,
-    admins: users.filter((u) => u.role === 'admin' || u.isSuperAdmin).length,
-    rh: users.filter((u) => u.role === 'rh').length,
-    funcionarios: users.filter((u) => u.role === 'funcionario').length,
+    total: users?.length || 0,
+    active: users?.filter((u) => u.active).length || 0,
+    inactive: users?.filter((u) => !u.active).length || 0,
+    admins: users?.filter((u) => u.role === 'admin' || u.isSuperAdmin).length || 0,
   };
 
   useEffect(() => {
@@ -213,7 +189,6 @@ export const useUsers = (): UseUsersReturn => {
     statusFilter,
     setStatusFilter,
     fetchUsers,
-    refreshUsers,
     createUser,
     updateUser,
     deleteUser,

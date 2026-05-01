@@ -1,4 +1,4 @@
-// src/components/Users/UserFilters.tsx
+// frontend/src/components/users/UserFilters.tsx
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 
 interface UserFiltersProps {
@@ -8,6 +8,7 @@ interface UserFiltersProps {
   onRoleFilterChange: (value: string) => void;
   statusFilter: string;
   onStatusFilterChange: (value: string) => void;
+  loading?: boolean;
 }
 
 export default function UserFilters({
@@ -17,6 +18,7 @@ export default function UserFilters({
   onRoleFilterChange,
   statusFilter,
   onStatusFilterChange,
+  loading = false,
 }: UserFiltersProps) {
   return (
     <div className="flex flex-col gap-4 p-4 bg-white border border-gray-200 rounded-2xl dark:border-gray-800 dark:bg-white/[0.03] sm:flex-row sm:items-center sm:justify-between">
@@ -30,29 +32,32 @@ export default function UserFilters({
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Buscar por nome, email ou usuário..."
-          className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+          disabled={loading}
+          className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
         />
       </div>
 
       {/* Filtros */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        {/* Filtro por Role */}
+        {/* Filtro por Role - valores em minúsculo para corresponder ao backend */}
         <select
           value={roleFilter}
           onChange={(e) => onRoleFilterChange(e.target.value)}
-          className="px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+          disabled={loading}
+          className="px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <option value="all">Todos os perfis</option>
-          <option value="ADMIN">Administrador</option>
-          <option value="RH">Recursos Humanos</option>
-          <option value="USER">Usuário Comum</option>
+          <option value="admin">Administrador</option>
+          <option value="rh">Recursos Humanos</option>
+          <option value="funcionario">Funcionário</option>
         </select>
 
         {/* Filtro por Status */}
         <select
           value={statusFilter}
           onChange={(e) => onStatusFilterChange(e.target.value)}
-          className="px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+          disabled={loading}
+          className="px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <option value="all">Todos os status</option>
           <option value="active">Ativos</option>
@@ -67,7 +72,8 @@ export default function UserFilters({
               onRoleFilterChange("all");
               onStatusFilterChange("all");
             }}
-            className="px-4 py-2 text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+            disabled={loading}
+            className="px-4 py-2 text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Limpar filtros
           </button>
