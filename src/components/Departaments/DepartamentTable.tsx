@@ -1,4 +1,4 @@
-// src/components/Departaments/DepartamentTable.tsx
+// frontend/src/components/Departaments/DepartamentTable.tsx
 import {
   Table,
   TableBody,
@@ -6,6 +6,7 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
+import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 
 interface Departament {
   id: string;
@@ -18,12 +19,14 @@ interface DepartamentTableProps {
   departaments: Departament[];
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
+  loading?: boolean;
 }
 
 export default function DepartamentTable({
   departaments,
   onEdit,
   onDelete,
+  loading = false,
 }: DepartamentTableProps) {
   const formatDate = (dateString: string) => {
     try {
@@ -33,11 +36,26 @@ export default function DepartamentTable({
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
       });
     } catch {
       return "---";
     }
   };
+
+  if (loading) {
+    return (
+      <div className="rounded-2xl border border-gray-200 bg-white p-8 dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">
+            Carregando departamentos...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (departaments.length === 0) {
     return (
@@ -110,7 +128,7 @@ export default function DepartamentTable({
             {departaments.map((departament, index) => (
               <TableRow
                 key={departament.id}
-                className="hover:bg-gray-50 dark:hover:bg-gray-800/30"
+                className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors"
               >
                 <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
                   {index + 1}
@@ -140,43 +158,19 @@ export default function DepartamentTable({
                     {/* Botão Editar */}
                     <button
                       onClick={() => onEdit(departament.id)}
-                      className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg dark:text-blue-400 dark:hover:bg-blue-900/20"
+                      className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg dark:text-blue-400 dark:hover:bg-blue-900/20 transition-colors"
                       title="Editar departamento"
                     >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                        />
-                      </svg>
+                      <PencilIcon className="w-5 h-5" />
                     </button>
 
                     {/* Botão Excluir */}
                     <button
                       onClick={() => onDelete(departament.id)}
-                      className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg dark:text-red-400 dark:hover:bg-red-900/20"
+                      className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg dark:text-red-400 dark:hover:bg-red-900/20 transition-colors"
                       title="Excluir departamento"
                     >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
+                      <TrashIcon className="w-5 h-5" />
                     </button>
                   </div>
                 </TableCell>
@@ -186,24 +180,10 @@ export default function DepartamentTable({
         </Table>
       </div>
 
-      {/* Footer com informações de paginação */}
+      {/* Footer com informações */}
       <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-800">
         <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
-          <span>
-            Mostrando {departaments.length} de {departaments.length}{" "}
-            departamentos
-          </span>
-          <div className="flex gap-2">
-            <button className="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800">
-              Anterior
-            </button>
-            <button className="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg">
-              1
-            </button>
-            <button className="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800">
-              Próxima
-            </button>
-          </div>
+          <span>Mostrando {departaments.length} departamento(s)</span>
         </div>
       </div>
     </div>

@@ -1,101 +1,36 @@
 // src/pages/Departaments/DepartamentList.tsx
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import Button from "../../components/ui/button/Button";
 import DepartamentTable from "../../components/Departaments/DepartamentTable";
 import DepartamentFilters from "../../components/Departaments/DepartamentFilters";
-
-// Dados mockados baseados na entidade Departament
-const mockDepartaments = [
-  {
-    id: "1",
-    departamentName: "Tecnologia",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: "2",
-    departamentName: "Recursos Humanos",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: "3",
-    departamentName: "Financeiro",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: "4",
-    departamentName: "Comercial",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: "5",
-    departamentName: "Operações",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: "6",
-    departamentName: "Marketing",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: "7",
-    departamentName: "Administração",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: "8",
-    departamentName: "Jurídico",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-];
+import { useDepartaments } from "../../hooks/useDepartaments";
+import { Toaster } from "react-hot-toast";
 
 export default function DepartamentList() {
   const navigate = useNavigate();
-  const [departaments, setDepartaments] = useState(mockDepartaments);
-  const [filteredDepartaments, setFilteredDepartaments] =
-    useState(mockDepartaments);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const {
+    filteredDepartaments,
+    loading,
+    searchTerm,
+    setSearchTerm,
+    deleteDepartament,
+    departaments,
+  } = useDepartaments();
 
-  useEffect(() => {
-    // Simula carregamento de dados
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    // Aplica filtro de busca
-    let filtered = [...departaments];
-
-    if (searchTerm) {
-      filtered = filtered.filter((dept) =>
-        dept.departamentName.toLowerCase().includes(searchTerm.toLowerCase()),
-      );
-    }
-
-    setFilteredDepartaments(filtered);
-  }, [searchTerm, departaments]);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const handleEdit = (id: string) => {
     navigate(`/departaments/edit/${id}`);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm("Tem certeza que deseja excluir este departamento?")) {
-      setDepartaments((prev) => prev.filter((dept) => dept.id !== id));
+      setDeletingId(id);
+      await deleteDepartament(id);
+      setDeletingId(null);
     }
   };
 
@@ -103,28 +38,9 @@ export default function DepartamentList() {
     navigate("/departaments/create");
   };
 
-  if (loading) {
-    return (
-      <>
-        <PageMeta
-          title="Listar Departamentos | Sistema RH"
-          description="testestes"
-        />
-        <PageBreadcrumb pageTitle="Departamentos" />
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-400">
-              Carregando departamentos...
-            </p>
-          </div>
-        </div>
-      </>
-    );
-  }
-
   return (
     <>
+      <Toaster position="top-right" />
       <PageMeta
         title="Listar Departamentos | Sistema de Gestão de RH"
         description="Gerencie os departamentos da empresa"
@@ -169,6 +85,7 @@ export default function DepartamentList() {
         <DepartamentFilters
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
+          loading={loading}
         />
 
         {/* Tabela de Departamentos */}
@@ -176,6 +93,7 @@ export default function DepartamentList() {
           departaments={filteredDepartaments}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          loading={loading}
         />
 
         {/* Estatísticas */}
@@ -187,6 +105,14 @@ export default function DepartamentList() {
               </p>
               <p className="text-xl font-semibold text-gray-800 dark:text-white/90">
                 {departaments.length}
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Resultados da busca
+              </p>
+              <p className="text-xl font-semibold text-gray-800 dark:text-white/90">
+                {filteredDepartaments.length}
               </p>
             </div>
             <div className="text-center">
