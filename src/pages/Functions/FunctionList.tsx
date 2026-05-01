@@ -1,105 +1,32 @@
 // src/pages/Functions/FunctionList.tsx
-import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import Button from "../../components/ui/button/Button";
 import FunctionTable from "../../components/Functions/FunctionTable";
 import FunctionFilters from "../../components/Functions/FunctionFilters";
-
-// Dados mockados baseados na entidade Function
-const mockFunctions = [
-  {
-    id: "1",
-    functionName: "Desenvolvedor Sênior",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    employees: [{ id: "1" }, { id: "2" }], // 2 funcionários
-  },
-  {
-    id: "2",
-    functionName: "Analista de RH",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    employees: [{ id: "3" }], // 1 funcionário
-  },
-  {
-    id: "3",
-    functionName: "Analista Financeiro",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    employees: [{ id: "4" }], // 1 funcionário
-  },
-  {
-    id: "4",
-    functionName: "Coordenador Comercial",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    employees: [], // 0 funcionários
-  },
-  {
-    id: "5",
-    functionName: "CTO",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    employees: [{ id: "5" }], // 1 funcionário
-  },
-  {
-    id: "6",
-    functionName: "Gerente de Projetos",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    employees: [{ id: "6" }, { id: "7" }], // 2 funcionários
-  },
-  {
-    id: "7",
-    functionName: "Analista de Suporte",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    employees: [{ id: "8" }], // 1 funcionário
-  },
-  {
-    id: "8",
-    functionName: "Designer UX/UI",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    employees: [], // 0 funcionários
-  },
-];
+import { Toaster } from "react-hot-toast";
+import { useFunctions } from "../../hooks/useFuncions";
 
 export default function FunctionList() {
   const navigate = useNavigate();
-  const [functions, setFunctions] = useState(mockFunctions);
-  const [filteredFunctions, setFilteredFunctions] = useState(mockFunctions);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    let filtered = [...functions];
-
-    if (searchTerm) {
-      filtered = filtered.filter((func) =>
-        func.functionName.toLowerCase().includes(searchTerm.toLowerCase()),
-      );
-    }
-
-    setFilteredFunctions(filtered);
-  }, [searchTerm, functions]);
+  const {
+    filteredFunctions,
+    loading,
+    searchTerm,
+    setSearchTerm,
+    deleteFunction,
+    functions,
+    getEmployeeCount,
+    canDelete,
+  } = useFunctions();
 
   const handleEdit = (id: string) => {
     navigate(`/functions/edit/${id}`);
   };
 
-  const handleDelete = (id: string) => {
-    const functionToDelete = functions.find((f) => f.id === id);
-    const employeeCount = functionToDelete?.employees?.length || 0;
+  const handleDelete = async (id: string) => {
+    const employeeCount = getEmployeeCount(id);
 
     if (employeeCount > 0) {
       alert(
@@ -109,7 +36,7 @@ export default function FunctionList() {
     }
 
     if (window.confirm("Tem certeza que deseja excluir este cargo?")) {
-      setFunctions((prev) => prev.filter((func) => func.id !== id));
+      await deleteFunction(id);
     }
   };
 
@@ -117,25 +44,21 @@ export default function FunctionList() {
     navigate("/functions/create");
   };
 
-  if (loading) {
-    return (
-      <>
-        <PageMeta title="Listar Cargos | Sistema RH" />
-        <PageBreadcrumb pageTitle="Cargos" />
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-400">
-              Carregando cargos...
-            </p>
-          </div>
-        </div>
-      </>
-    );
-  }
+  // Estatísticas
+  const occupiedFunctions = functions.filter(
+    (f) => getEmployeeCount(f.id) > 0,
+  ).length;
+  const vacantFunctions = functions.filter(
+    (f) => getEmployeeCount(f.id) === 0,
+  ).length;
+  const totalEmployees = functions.reduce(
+    (sum, f) => sum + getEmployeeCount(f.id),
+    0,
+  );
 
   return (
     <>
+      <Toaster position="top-right" />
       <PageMeta
         title="Listar Cargos | Sistema de Gestão de RH"
         description="Gerencie os cargos da empresa"
@@ -178,12 +101,16 @@ export default function FunctionList() {
         <FunctionFilters
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
+          loading={loading}
         />
 
         <FunctionTable
           functions={filteredFunctions}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          loading={loading}
+          getEmployeeCount={getEmployeeCount}
+          canDelete={canDelete}
         />
 
         <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
@@ -201,7 +128,7 @@ export default function FunctionList() {
                 Cargos Ocupados
               </p>
               <p className="text-xl font-semibold text-green-600 dark:text-green-400">
-                {functions.filter((f) => (f.employees?.length || 0) > 0).length}
+                {occupiedFunctions}
               </p>
             </div>
             <div className="text-center">
@@ -209,10 +136,7 @@ export default function FunctionList() {
                 Cargos Vagos
               </p>
               <p className="text-xl font-semibold text-yellow-600 dark:text-yellow-400">
-                {
-                  functions.filter((f) => (f.employees?.length || 0) === 0)
-                    .length
-                }
+                {vacantFunctions}
               </p>
             </div>
             <div className="text-center">
@@ -220,10 +144,7 @@ export default function FunctionList() {
                 Total de Funcionários
               </p>
               <p className="text-xl font-semibold text-blue-600 dark:text-blue-400">
-                {functions.reduce(
-                  (sum, f) => sum + (f.employees?.length || 0),
-                  0,
-                )}
+                {totalEmployees}
               </p>
             </div>
           </div>

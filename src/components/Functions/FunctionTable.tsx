@@ -1,4 +1,4 @@
-// src/components/Functions/FunctionTable.tsx
+// frontend/src/components/Functions/FunctionTable.tsx
 import {
   Table,
   TableBody,
@@ -7,6 +7,7 @@ import {
   TableRow,
 } from "../ui/table";
 import Badge from "../ui/badge/Badge";
+import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 
 interface Function {
   id: string;
@@ -20,12 +21,18 @@ interface FunctionTableProps {
   functions: Function[];
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
+  loading?: boolean;
+  getEmployeeCount?: (id: string) => number;
+  canDelete?: (id: string) => boolean;
 }
 
 export default function FunctionTable({
   functions,
   onEdit,
   onDelete,
+  loading = false,
+  getEmployeeCount,
+  canDelete,
 }: FunctionTableProps) {
   const formatDate = (dateString: string) => {
     try {
@@ -35,6 +42,8 @@ export default function FunctionTable({
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
       });
     } catch {
       return "---";
@@ -50,6 +59,19 @@ export default function FunctionTable({
       return <Badge color="success">{count} funcionários</Badge>;
     }
   };
+
+  if (loading) {
+    return (
+      <div className="rounded-2xl border border-gray-200 bg-white p-8 dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">
+            Carregando cargos...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (functions.length === 0) {
     return (
@@ -125,114 +147,88 @@ export default function FunctionTable({
           </TableHeader>
 
           <TableBody className="divide-y divide-gray-100 dark:divide-gray-800">
-            {functions.map((func, index) => (
-              <TableRow
-                key={func.id}
-                className="hover:bg-gray-50 dark:hover:bg-gray-800/30"
-              >
-                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                  {index + 1}
-                </TableCell>
-                <TableCell className="py-3">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 overflow-hidden rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
-                      <span className="text-white font-medium text-sm uppercase">
-                        {func.functionName.charAt(0)}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                        {func.functionName}
-                      </p>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell className="py-3">
-                  {getEmployeeCountBadge(func.employees?.length || 0)}
-                </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                  {formatDate(func.createdAt)}
-                </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                  {formatDate(func.updatedAt)}
-                </TableCell>
-                <TableCell className="py-3">
-                  <div className="flex items-center gap-2">
-                    {/* Botão Editar */}
-                    <button
-                      onClick={() => onEdit(func.id)}
-                      className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg dark:text-blue-400 dark:hover:bg-blue-900/20"
-                      title="Editar cargo"
-                    >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                        />
-                      </svg>
-                    </button>
+            {functions.map((func, index) => {
+              const employeeCount = getEmployeeCount
+                ? getEmployeeCount(func.id)
+                : func.employees?.length || 0;
+              const canDeleteFunction = canDelete
+                ? canDelete(func.id)
+                : employeeCount === 0;
 
-                    {/* Botão Excluir */}
-                    <button
-                      onClick={() => onDelete(func.id)}
-                      className={`p-1.5 rounded-lg ${
-                        (func.employees?.length || 0) > 0
-                          ? "text-gray-400 cursor-not-allowed"
-                          : "text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
-                      }`}
-                      title={
-                        (func.employees?.length || 0) > 0
-                          ? "Não é possível excluir cargo com funcionários vinculados"
-                          : "Excluir cargo"
-                      }
-                      disabled={(func.employees?.length || 0) > 0}
-                    >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+              return (
+                <TableRow
+                  key={func.id}
+                  className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors"
+                >
+                  <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                    {index + 1}
+                  </TableCell>
+                  <TableCell className="py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 overflow-hidden rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
+                        <span className="text-white font-medium text-sm uppercase">
+                          {func.functionName.charAt(0)}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                          {func.functionName}
+                        </p>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-3">
+                    {getEmployeeCountBadge(employeeCount)}
+                  </TableCell>
+                  <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                    {formatDate(func.createdAt)}
+                  </TableCell>
+                  <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                    {formatDate(func.updatedAt)}
+                  </TableCell>
+                  <TableCell className="py-3">
+                    <div className="flex items-center gap-2">
+                      {/* Botão Editar */}
+                      <button
+                        onClick={() => onEdit(func.id)}
+                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg dark:text-blue-400 dark:hover:bg-blue-900/20 transition-colors"
+                        title="Editar cargo"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
+                        <PencilIcon className="w-5 h-5" />
+                      </button>
+
+                      {/* Botão Excluir */}
+                      <button
+                        onClick={() => onDelete(func.id)}
+                        disabled={!canDeleteFunction}
+                        className={`p-1.5 rounded-lg transition-colors ${
+                          !canDeleteFunction
+                            ? "text-gray-400 cursor-not-allowed"
+                            : "text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                        }`}
+                        title={
+                          !canDeleteFunction
+                            ? "Não é possível excluir cargo com funcionários vinculados"
+                            : "Excluir cargo"
+                        }
+                      >
+                        <TrashIcon className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>
 
-      {/* Footer com informações de paginação */}
+      {/* Footer com informações */}
       <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-800">
         <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
           <span>
             Mostrando {functions.length} de {functions.length} cargos
           </span>
-          <div className="flex gap-2">
-            <button className="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800">
-              Anterior
-            </button>
-            <button className="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg">
-              1
-            </button>
-            <button className="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800">
-              Próxima
-            </button>
-          </div>
         </div>
       </div>
     </div>

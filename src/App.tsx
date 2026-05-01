@@ -10,7 +10,6 @@ import UserList from "./pages/users/UserList";
 import CreateUser from "./pages/users/CreateUser";
 import CreateDepartament from "./pages/Departaments/CreateDepartament";
 import DepartamentList from "./pages/Departaments/DepartamentList";
-import EditDepartament from "./pages/Departaments/EditDepartament";
 import EmployeeList from "./pages/Employee/EmployeeList";
 import CreateEmployee from "./pages/Employee/CreateEmployee";
 import RemunerationList from "./pages/Remunerations/RemunerationList";
@@ -66,7 +65,6 @@ export default function App() {
             {/* Departamentos */}
             <Route path="departaments/create" element={<CreateDepartament />} />
             <Route path="departaments/list" element={<DepartamentList />} />
-            <Route path="departaments/edit" element={<EditDepartament />} />
             {/* Employees */}
             <Route path="employee/list" element={<EmployeeList />} />
             <Route path="employee/create" element={<CreateEmployee />} />

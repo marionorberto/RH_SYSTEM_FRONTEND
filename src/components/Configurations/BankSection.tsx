@@ -1,5 +1,5 @@
 // src/components/Configurations/BankSection.tsx
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Button from "../ui/button/Button";
 import Input from "../form/input/InputField";
 import Label from "../form/Label";
@@ -11,100 +11,57 @@ import {
   TableRow,
 } from "../ui/table";
 import Badge from "../ui/badge/Badge";
-
-interface Bank {
-  id: string;
-  bank_name: string;
-  sigla: string;
-  code: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-// Dados mockados
-const mockBanks: Bank[] = [
-  {
-    id: "1",
-    bank_name: "Banco Angolano de Investimentos",
-    sigla: "BAI",
-    code: "001",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: "2",
-    bank_name: "Banco de Poupança e Crédito",
-    sigla: "BPC",
-    code: "002",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: "3",
-    bank_name: "Banco Económico",
-    sigla: "BE",
-    code: "003",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-];
+import { useBanks } from "../../hooks/useBanks";
+import toast from "react-hot-toast";
 
 export default function BankSection() {
-  const [banks, setBanks] = useState(mockBanks);
-  const [loading, setLoading] = useState(true);
+  const { banks, loading, createBank, updateBank, deleteBank, isCodeUnique } =
+    useBanks();
   const [showModal, setShowModal] = useState(false);
-  const [editingItem, setEditingItem] = useState<Bank | null>(null);
+  const [editingItem, setEditingItem] = useState<any>(null);
   const [formData, setFormData] = useState({
     bank_name: "",
     sigla: "",
     code: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 500);
-    return () => clearTimeout(timer);
-  }, []);
+  const [isSaving, setIsSaving] = useState(false);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    if (!formData.bank_name)
+    if (!formData.bank_name.trim()) {
       newErrors.bank_name = "Nome do banco é obrigatório";
-    if (!formData.sigla) newErrors.sigla = "Sigla é obrigatória";
-    if (!formData.code) newErrors.code = "Código é obrigatório";
-    else if (
-      banks.some((b) => b.code === formData.code && b.id !== editingItem?.id)
-    ) {
+    }
+    if (!formData.sigla.trim()) {
+      newErrors.sigla = "Sigla é obrigatória";
+    }
+    if (!formData.code.trim()) {
+      newErrors.code = "Código é obrigatório";
+    } else if (!isCodeUnique(formData.code, editingItem?.id)) {
       newErrors.code = "Este código já está cadastrado";
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) return;
 
+    setIsSaving(true);
+    let result;
     if (editingItem) {
-      setBanks((prev) =>
-        prev.map((item) =>
-          item.id === editingItem.id
-            ? { ...item, ...formData, updatedAt: new Date().toISOString() }
-            : item,
-        ),
-      );
+      result = await updateBank(editingItem.id, formData);
     } else {
-      const newBank: Bank = {
-        id: Date.now().toString(),
-        ...formData,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      setBanks((prev) => [...prev, newBank]);
+      result = await createBank(formData);
     }
-    handleCloseModal();
+    setIsSaving(false);
+
+    if (result) {
+      handleCloseModal();
+    }
   };
 
-  const handleEdit = (item: Bank) => {
+  const handleEdit = (item: any) => {
     setEditingItem(item);
     setFormData({
       bank_name: item.bank_name,
@@ -114,9 +71,9 @@ export default function BankSection() {
     setShowModal(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm("Tem certeza que deseja excluir este banco?")) {
-      setBanks((prev) => prev.filter((item) => item.id !== id));
+      await deleteBank(id);
     }
   };
 
@@ -212,6 +169,7 @@ export default function BankSection() {
                     setFormData({ ...formData, bank_name: e.target.value })
                   }
                   error={!!errors.bank_name}
+                  disabled={isSaving}
                 />
                 {errors.bank_name && (
                   <p className="mt-1 text-sm text-red-600">
@@ -227,6 +185,7 @@ export default function BankSection() {
                     setFormData({ ...formData, sigla: e.target.value })
                   }
                   error={!!errors.sigla}
+                  disabled={isSaving}
                 />
               </div>
               <div>
@@ -237,6 +196,7 @@ export default function BankSection() {
                     setFormData({ ...formData, code: e.target.value })
                   }
                   error={!!errors.code}
+                  disabled={isSaving}
                 />
                 {errors.code && (
                   <p className="mt-1 text-sm text-red-600">{errors.code}</p>
@@ -244,11 +204,19 @@ export default function BankSection() {
               </div>
             </div>
             <div className="flex justify-end gap-3 mt-6">
-              <Button variant="outline" onClick={handleCloseModal}>
+              <Button
+                variant="outline"
+                onClick={handleCloseModal}
+                disabled={isSaving}
+              >
                 Cancelar
               </Button>
-              <Button variant="primary" onClick={handleSubmit}>
-                Salvar
+              <Button
+                variant="primary"
+                onClick={handleSubmit}
+                disabled={isSaving}
+              >
+                {isSaving ? "Salvando..." : "Salvar"}
               </Button>
             </div>
           </div>

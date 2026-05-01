@@ -1,5 +1,5 @@
 // src/components/Configurations/IrtSection.tsx
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Button from "../ui/button/Button";
 import Input from "../form/input/InputField";
 import Label from "../form/Label";
@@ -10,71 +10,13 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
-
-interface IrtItem {
-  id: string;
-  inferiorLimit: number;
-  superiorLimit: number | null;
-  tax: number;
-  FixedValue: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-// Dados mockados
-const mockIrtItems: IrtItem[] = [
-  {
-    id: "1",
-    inferiorLimit: 0,
-    superiorLimit: 100000,
-    tax: 0,
-    FixedValue: 0,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: "2",
-    inferiorLimit: 100001,
-    superiorLimit: 200000,
-    tax: 10,
-    FixedValue: 0,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: "3",
-    inferiorLimit: 200001,
-    superiorLimit: 350000,
-    tax: 15,
-    FixedValue: 10000,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: "4",
-    inferiorLimit: 350001,
-    superiorLimit: 500000,
-    tax: 25,
-    FixedValue: 45000,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: "5",
-    inferiorLimit: 500001,
-    superiorLimit: null,
-    tax: 35,
-    FixedValue: 95000,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-];
+import { useIrt } from "../../hooks/useIrt";
 
 export default function IrtSection() {
-  const [irtItems, setIrtItems] = useState(mockIrtItems);
-  const [loading, setLoading] = useState(true);
+  const { irtItems, loading, createIrtItem, updateIrtItem, deleteIrtItem } =
+    useIrt();
   const [showModal, setShowModal] = useState(false);
-  const [editingItem, setEditingItem] = useState<IrtItem | null>(null);
+  const [editingItem, setEditingItem] = useState<any>(null);
   const [formData, setFormData] = useState({
     inferiorLimit: "",
     superiorLimit: "",
@@ -82,17 +24,20 @@ export default function IrtSection() {
     FixedValue: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 500);
-    return () => clearTimeout(timer);
-  }, []);
+  const [isSaving, setIsSaving] = useState(false);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    if (!formData.inferiorLimit)
+    if (!formData.inferiorLimit) {
       newErrors.inferiorLimit = "Limite inferior é obrigatório";
-    if (!formData.tax) newErrors.tax = "Taxa é obrigatória";
+    } else if (parseFloat(formData.inferiorLimit) < 0) {
+      newErrors.inferiorLimit = "Limite inferior deve ser maior ou igual a 0";
+    }
+    if (!formData.tax) {
+      newErrors.tax = "Taxa é obrigatória";
+    } else if (parseFloat(formData.tax) < 0 || parseFloat(formData.tax) > 100) {
+      newErrors.tax = "Taxa deve estar entre 0 e 100";
+    }
     if (
       formData.superiorLimit &&
       parseFloat(formData.superiorLimit) <= parseFloat(formData.inferiorLimit)
@@ -104,32 +49,33 @@ export default function IrtSection() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) return;
 
-    const newItem: IrtItem = {
-      id: editingItem?.id || Date.now().toString(),
+    setIsSaving(true);
+    const data = {
       inferiorLimit: parseFloat(formData.inferiorLimit),
       superiorLimit: formData.superiorLimit
         ? parseFloat(formData.superiorLimit)
         : null,
       tax: parseFloat(formData.tax),
       FixedValue: parseFloat(formData.FixedValue) || 0,
-      createdAt: editingItem?.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
     };
 
+    let result;
     if (editingItem) {
-      setIrtItems((prev) =>
-        prev.map((item) => (item.id === editingItem.id ? newItem : item)),
-      );
+      result = await updateIrtItem(editingItem.id, data);
     } else {
-      setIrtItems((prev) => [...prev, newItem]);
+      result = await createIrtItem(data);
     }
-    handleCloseModal();
+    setIsSaving(false);
+
+    if (result) {
+      handleCloseModal();
+    }
   };
 
-  const handleEdit = (item: IrtItem) => {
+  const handleEdit = (item: any) => {
     setEditingItem(item);
     setFormData({
       inferiorLimit: item.inferiorLimit.toString(),
@@ -140,9 +86,9 @@ export default function IrtSection() {
     setShowModal(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm("Tem certeza que deseja excluir esta faixa de IRT?")) {
-      setIrtItems((prev) => prev.filter((item) => item.id !== id));
+      await deleteIrtItem(id);
     }
   };
 
@@ -241,6 +187,7 @@ export default function IrtSection() {
         </Table>
       </div>
 
+      {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-2xl p-6 w-full max-w-md dark:bg-gray-900">
@@ -257,7 +204,13 @@ export default function IrtSection() {
                     setFormData({ ...formData, inferiorLimit: e.target.value })
                   }
                   error={!!errors.inferiorLimit}
+                  disabled={isSaving}
                 />
+                {errors.inferiorLimit && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.inferiorLimit}
+                  </p>
+                )}
               </div>
               <div>
                 <Label>Limite Superior (AOA)</Label>
@@ -268,10 +221,16 @@ export default function IrtSection() {
                     setFormData({ ...formData, superiorLimit: e.target.value })
                   }
                   error={!!errors.superiorLimit}
+                  disabled={isSaving}
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   Deixe em branco para "sem limite superior"
                 </p>
+                {errors.superiorLimit && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.superiorLimit}
+                  </p>
+                )}
               </div>
               <div>
                 <Label required>Taxa (%)</Label>
@@ -283,7 +242,11 @@ export default function IrtSection() {
                     setFormData({ ...formData, tax: e.target.value })
                   }
                   error={!!errors.tax}
+                  disabled={isSaving}
                 />
+                {errors.tax && (
+                  <p className="mt-1 text-sm text-red-600">{errors.tax}</p>
+                )}
               </div>
               <div>
                 <Label>Valor Fixo (AOA)</Label>
@@ -293,15 +256,24 @@ export default function IrtSection() {
                   onChange={(e) =>
                     setFormData({ ...formData, FixedValue: e.target.value })
                   }
+                  disabled={isSaving}
                 />
               </div>
             </div>
             <div className="flex justify-end gap-3 mt-6">
-              <Button variant="outline" onClick={handleCloseModal}>
+              <Button
+                variant="outline"
+                onClick={handleCloseModal}
+                disabled={isSaving}
+              >
                 Cancelar
               </Button>
-              <Button variant="primary" onClick={handleSubmit}>
-                Salvar
+              <Button
+                variant="primary"
+                onClick={handleSubmit}
+                disabled={isSaving}
+              >
+                {isSaving ? "Salvando..." : "Salvar"}
               </Button>
             </div>
           </div>

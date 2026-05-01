@@ -34,14 +34,6 @@ const navItems: NavItem[] = [
   },
   {
     icon: <UserIcon />,
-    name: "Conta de Usuários",
-    subItems: [
-      { name: "Adicionar Novo", path: "/dashboard/users/create", pro: false },
-      { name: "Listar Contas", path: "/dashboard/users/list", pro: false },
-    ],
-  },
-  {
-    icon: <UserIcon />,
     name: "Departamentos",
     subItems: [
       {
@@ -50,7 +42,6 @@ const navItems: NavItem[] = [
         pro: false,
       },
       { name: "Listar Dep.", path: "/dashboard/departaments/list", pro: false },
-      { name: "Editar Dep.", path: "/dashboard/departaments/edit", pro: false },
     ],
   },
   {
@@ -63,6 +54,14 @@ const navItems: NavItem[] = [
         pro: false,
       },
       { name: "Listar", path: "/dashboard/functions/list", pro: false },
+    ],
+  },
+  {
+    icon: <UserIcon />,
+    name: "Conta de Usuários",
+    subItems: [
+      { name: "Adicionar Novo", path: "/dashboard/users/create", pro: false },
+      { name: "Listar Contas", path: "/dashboard/users/list", pro: false },
     ],
   },
   {
