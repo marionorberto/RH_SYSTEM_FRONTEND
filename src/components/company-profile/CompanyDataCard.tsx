@@ -1,56 +1,71 @@
-// src/components/CompanyProfile/CompanyDataCard.tsx
+// frontend/src/components/company-profile/CompanyDataCard.tsx
 import { useModal } from "../../hooks/useModal";
 import { Modal } from "../ui/modal";
 import Button from "../ui/button/Button";
 import Input from "../form/input/InputField";
 import Label from "../form/Label";
 import { useEffect, useState } from "react";
-
-interface ICompanyData {
-  id: string;
-  companyName: string;
-  companyNIF: string;
-  tickectModel: string;
-  corporativeEmail: string;
-  note: string;
-  [key: string]: any;
-}
-
-// Dados mockados
-const mockCompanyData: ICompanyData = {
-  id: "1",
-  companyName: "Minha Empresa Ltda",
-  companyNIF: "123456789",
-  tickectModel: "Modelo Padrão",
-  corporativeEmail: "rh@minhaempresa.com",
-  note: "Empresa de tecnologia",
-};
+import { useCompanyData } from "../../hooks/useCompanyData";
+import toast from "react-hot-toast";
 
 export default function CompanyDataCard() {
   const { isOpen, openModal, closeModal } = useModal();
-  const [companyData, setCompanyData] = useState<ICompanyData | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [formData, setFormData] = useState<ICompanyData | null>(null);
+  const { companyData, loading, updateCompanyData, createCompanyData } =
+    useCompanyData();
+  const [formData, setFormData] = useState<Partial<any>>({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
-    // Simula carregamento de dados
-    const timer = setTimeout(() => {
-      setCompanyData(mockCompanyData);
-      setFormData(mockCompanyData);
-      setLoading(false);
-    }, 500);
+    if (companyData) {
+      setFormData({
+        companyName: companyData.companyName || "",
+        companyNIF: companyData.companyNIF || "",
+        tickectModel: companyData.tickectModel || "",
+        corporativeEmail: companyData.corporativeEmail || "",
+        note: companyData.note || "",
+        SocialSecurityPassword: companyData.SocialSecurityPassword || "",
+      });
+      setIsCreating(false);
+    } else if (!loading && !companyData) {
+      setIsCreating(true);
+      setFormData({
+        companyName: "",
+        companyNIF: "",
+        tickectModel: "",
+        corporativeEmail: "",
+        note: "",
+        SocialSecurityPassword: "",
+      });
+    }
+  }, [companyData, loading]);
 
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleInputChange = (field: keyof ICompanyData, value: string) => {
-    setFormData((prev) => (prev ? { ...prev, [field]: value } : null));
+  const handleInputChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = () => {
-    console.log("Salvando dados da empresa...", formData);
-    setCompanyData(formData);
-    closeModal();
+  const handleSave = async () => {
+    setIsSaving(true);
+
+    let result;
+    if (isCreating) {
+      result = await createCompanyData(formData);
+    } else {
+      result = await updateCompanyData(formData);
+    }
+
+    setIsSaving(false);
+
+    if (result) {
+      toast.success(
+        isCreating
+          ? "Dados da empresa criados com sucesso!"
+          : "Dados atualizados com sucesso!",
+      );
+      closeModal();
+    } else {
+      toast.error("Erro ao salvar dados da empresa");
+    }
   };
 
   if (loading) {
@@ -62,6 +77,26 @@ export default function CompanyDataCard() {
             <div className="h-4 bg-gray-200 rounded w-1/2"></div>
             <div className="h-4 bg-gray-200 rounded w-1/3"></div>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!companyData && !isCreating) {
+    return (
+      <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
+        <div className="text-center">
+          <p className="text-gray-500 dark:text-gray-400 mb-4">
+            Nenhum dado da empresa encontrado
+          </p>
+          <Button
+            onClick={() => {
+              setIsCreating(true);
+              openModal();
+            }}
+          >
+            Configurar Dados da Empresa
+          </Button>
         </div>
       </div>
     );
@@ -113,6 +148,15 @@ export default function CompanyDataCard() {
                 </p>
               </div>
 
+              <div>
+                <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                  Nº Segurança Social
+                </p>
+                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                  {companyData?.SocialSecurityPassword ?? "---"}
+                </p>
+              </div>
+
               <div className="col-span-2">
                 <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
                   Notas
@@ -125,7 +169,11 @@ export default function CompanyDataCard() {
           </div>
 
           <button
-            onClick={openModal}
+            onClick={() => {
+              setIsCreating(false);
+              setFormData(companyData || {});
+              openModal();
+            }}
             className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto"
           >
             <svg
@@ -143,7 +191,7 @@ export default function CompanyDataCard() {
                 fill=""
               />
             </svg>
-            Editar
+            {!companyData ? "Configurar" : "Editar"}
           </button>
         </div>
       </div>
@@ -152,17 +200,23 @@ export default function CompanyDataCard() {
         <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
           <div className="px-2 pr-14">
             <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-              Editar Dados da Empresa
+              {isCreating ? "Configurar" : "Editar"} Dados da Empresa
             </h4>
             <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
               Mantenha os dados da sua empresa sempre atualizados
             </p>
           </div>
-          <form className="flex flex-col">
+          <form
+            className="flex flex-col"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSave();
+            }}
+          >
             <div className="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
               <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
                 <div className="col-span-2">
-                  <Label>Nome da Empresa *</Label>
+                  <Label>Nome da Empresa {!companyData && "*"}</Label>
                   <Input
                     type="text"
                     value={formData?.companyName || ""}
@@ -170,11 +224,12 @@ export default function CompanyDataCard() {
                       handleInputChange("companyName", e.target.value)
                     }
                     placeholder="Digite o nome da empresa"
+                    required={!companyData}
                   />
                 </div>
 
                 <div className="col-span-2 lg:col-span-1">
-                  <Label>NIF *</Label>
+                  <Label>NIF {!companyData && "*"}</Label>
                   <Input
                     type="text"
                     value={formData?.companyNIF || ""}
@@ -182,6 +237,22 @@ export default function CompanyDataCard() {
                       handleInputChange("companyNIF", e.target.value)
                     }
                     placeholder="Digite o NIF"
+                    required={!companyData}
+                  />
+                </div>
+
+                <div className="col-span-2 lg:col-span-1">
+                  <Label>Nº Segurança Social</Label>
+                  <Input
+                    type="text"
+                    value={formData?.SocialSecurityPassword || ""}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "SocialSecurityPassword",
+                        e.target.value,
+                      )
+                    }
+                    placeholder="Número de segurança social"
                   />
                 </div>
 
@@ -197,7 +268,7 @@ export default function CompanyDataCard() {
                   />
                 </div>
 
-                <div className="col-span-2">
+                <div className="col-span-2 lg:col-span-1">
                   <Label>Email Corporativo</Label>
                   <Input
                     type="email"
@@ -222,11 +293,20 @@ export default function CompanyDataCard() {
               </div>
             </div>
             <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-              <Button size="sm" variant="outline" onClick={closeModal}>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={closeModal}
+                disabled={isSaving}
+              >
                 Cancelar
               </Button>
-              <Button size="sm" onClick={handleSave}>
-                Salvar Alterações
+              <Button size="sm" onClick={handleSave} disabled={isSaving}>
+                {isSaving
+                  ? "Salvando..."
+                  : isCreating
+                    ? "Criar"
+                    : "Salvar Alterações"}
               </Button>
             </div>
           </form>

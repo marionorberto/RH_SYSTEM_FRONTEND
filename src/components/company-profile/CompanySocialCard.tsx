@@ -1,48 +1,44 @@
-// src/components/CompanyProfile/CompanySocialCard.tsx
+// frontend/src/components/company-profile/CompanySocialCard.tsx
 import { useModal } from "../../hooks/useModal";
 import { Modal } from "../ui/modal";
 import Button from "../ui/button/Button";
 import Input from "../form/input/InputField";
 import Label from "../form/Label";
 import { useEffect, useState } from "react";
-
-interface ICompanySocial {
-  linkedin: string;
-  instagram: string;
-  whatsapp: string;
-}
-
-// Dados mockados
-const mockSocialData: ICompanySocial = {
-  linkedin: "https://linkedin.com/company/minhaempresa",
-  instagram: "https://instagram.com/minhaempresa",
-  whatsapp: "+244 923 456 789",
-};
+import { useCompanyData } from "../../hooks/useCompanyData";
+import toast from "react-hot-toast";
 
 export default function CompanySocialCard() {
   const { isOpen, openModal, closeModal } = useModal();
-  const [socialData, setSocialData] = useState<ICompanySocial | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [formData, setFormData] = useState<ICompanySocial | null>(null);
+  const { companyData, loading, updateCompanyData } = useCompanyData();
+  const [formData, setFormData] = useState<Partial<any>>({});
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setSocialData(mockSocialData);
-      setFormData(mockSocialData);
-      setLoading(false);
-    }, 500);
+    if (companyData) {
+      setFormData({
+        linkedin: companyData.linkedin || "",
+        instagram: companyData.instagram || "",
+        whatsapp: companyData.whatsapp || "",
+      });
+    }
+  }, [companyData]);
 
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleInputChange = (field: keyof ICompanySocial, value: string) => {
-    setFormData((prev) => (prev ? { ...prev, [field]: value } : null));
+  const handleInputChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = () => {
-    console.log("Salvando redes sociais...", formData);
-    setSocialData(formData);
-    closeModal();
+  const handleSave = async () => {
+    setIsSaving(true);
+    const result = await updateCompanyData(formData);
+    setIsSaving(false);
+
+    if (result) {
+      toast.success("Redes sociais atualizadas com sucesso!");
+      closeModal();
+    } else {
+      toast.error("Erro ao atualizar redes sociais");
+    }
   };
 
   if (loading) {
@@ -73,42 +69,60 @@ export default function CompanySocialCard() {
                 <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
                   LinkedIn
                 </p>
-                <a
-                  href={socialData?.linkedin || "#"}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400"
-                >
-                  {socialData?.linkedin ?? "---"}
-                </a>
+                {companyData?.linkedin ? (
+                  <a
+                    href={companyData.linkedin}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400"
+                  >
+                    {companyData.linkedin}
+                  </a>
+                ) : (
+                  <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                    ---
+                  </p>
+                )}
               </div>
 
               <div>
                 <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
                   Instagram
                 </p>
-                <a
-                  href={socialData?.instagram || "#"}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm font-medium text-pink-600 hover:underline dark:text-pink-400"
-                >
-                  {socialData?.instagram ?? "---"}
-                </a>
+                {companyData?.instagram ? (
+                  <a
+                    href={companyData.instagram}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-medium text-pink-600 hover:underline dark:text-pink-400"
+                  >
+                    {companyData.instagram}
+                  </a>
+                ) : (
+                  <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                    ---
+                  </p>
+                )}
               </div>
 
               <div>
                 <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
                   WhatsApp
                 </p>
-                <a
-                  href={`https://wa.me/${socialData?.whatsapp?.replace(/\D/g, "")}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm font-medium text-green-600 hover:underline dark:text-green-400"
-                >
-                  {socialData?.whatsapp ?? "---"}
-                </a>
+                {companyData?.whatsapp ? (
+                  <a
+                    href={`https://wa.me/${companyData.whatsapp.replace(/\D/g, "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-medium text-green-600 hover:underline dark:text-green-400"
+                  >
+                    {companyData.whatsapp}
+                  </a>
+                ) : (
+                  <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                    ---
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -158,7 +172,7 @@ export default function CompanySocialCard() {
                     onChange={(e) =>
                       handleInputChange("linkedin", e.target.value)
                     }
-                    placeholder="https://linkedin.com/company/empresa"
+                    placeholder="https://www.linkedin.com/company/empresa"
                   />
                 </div>
 
@@ -170,7 +184,7 @@ export default function CompanySocialCard() {
                     onChange={(e) =>
                       handleInputChange("instagram", e.target.value)
                     }
-                    placeholder="https://instagram.com/empresa"
+                    placeholder="https://www.instagram.com/empresa"
                   />
                 </div>
 
@@ -182,20 +196,25 @@ export default function CompanySocialCard() {
                     onChange={(e) =>
                       handleInputChange("whatsapp", e.target.value)
                     }
-                    placeholder="+244 923 456 789"
+                    placeholder="+244923456789"
                   />
                   <p className="mt-1 text-xs text-gray-500">
-                    Número com código do país e DDD
+                    Número com código do país e DDD (ex: +244923456789)
                   </p>
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-              <Button size="sm" variant="outline" onClick={closeModal}>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={closeModal}
+                disabled={isSaving}
+              >
                 Cancelar
               </Button>
-              <Button size="sm" onClick={handleSave}>
-                Salvar Alterações
+              <Button size="sm" onClick={handleSave} disabled={isSaving}>
+                {isSaving ? "Salvando..." : "Salvar Alterações"}
               </Button>
             </div>
           </form>

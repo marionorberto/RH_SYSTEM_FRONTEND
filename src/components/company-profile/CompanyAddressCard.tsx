@@ -1,50 +1,45 @@
-// src/components/CompanyProfile/CompanyAddressCard.tsx
+// frontend/src/components/company-profile/CompanyAddressCard.tsx
 import { useModal } from "../../hooks/useModal";
 import { Modal } from "../ui/modal";
 import Button from "../ui/button/Button";
 import Input from "../form/input/InputField";
 import Label from "../form/Label";
 import { useEffect, useState } from "react";
-
-interface ICompanyAddress {
-  street: string;
-  neighbourhood: string;
-  houseNumber: string;
-  postalCode: string;
-}
-
-// Dados mockados
-const mockAddressData: ICompanyAddress = {
-  street: "Rua 1",
-  neighbourhood: "Centro",
-  houseNumber: "10",
-  postalCode: "1234-567",
-};
+import { useCompanyData } from "../../hooks/useCompanyData";
+import toast from "react-hot-toast";
 
 export default function CompanyAddressCard() {
   const { isOpen, openModal, closeModal } = useModal();
-  const [addressData, setAddressData] = useState<ICompanyAddress | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [formData, setFormData] = useState<ICompanyAddress | null>(null);
+  const { companyData, loading, updateCompanyData } = useCompanyData();
+  const [formData, setFormData] = useState<Partial<any>>({});
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setAddressData(mockAddressData);
-      setFormData(mockAddressData);
-      setLoading(false);
-    }, 500);
+    if (companyData) {
+      setFormData({
+        street: companyData.street || "",
+        neighbourhood: companyData.neighbourhood || "",
+        houseNumber: companyData.houseNumber || "",
+        postalCode: companyData.postalCode || "",
+      });
+    }
+  }, [companyData]);
 
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleInputChange = (field: keyof ICompanyAddress, value: string) => {
-    setFormData((prev) => (prev ? { ...prev, [field]: value } : null));
+  const handleInputChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = () => {
-    console.log("Salvando endereço...", formData);
-    setAddressData(formData);
-    closeModal();
+  const handleSave = async () => {
+    setIsSaving(true);
+    const result = await updateCompanyData(formData);
+    setIsSaving(false);
+
+    if (result) {
+      toast.success("Endereço atualizado com sucesso!");
+      closeModal();
+    } else {
+      toast.error("Erro ao atualizar endereço");
+    }
   };
 
   if (loading) {
@@ -76,7 +71,7 @@ export default function CompanyAddressCard() {
                   Rua
                 </p>
                 <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                  {addressData?.street ?? "---"}
+                  {companyData?.street ?? "---"}
                 </p>
               </div>
 
@@ -85,7 +80,7 @@ export default function CompanyAddressCard() {
                   Bairro
                 </p>
                 <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                  {addressData?.neighbourhood ?? "---"}
+                  {companyData?.neighbourhood ?? "---"}
                 </p>
               </div>
 
@@ -94,7 +89,7 @@ export default function CompanyAddressCard() {
                   Número da Casa
                 </p>
                 <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                  {addressData?.houseNumber ?? "---"}
+                  {companyData?.houseNumber ?? "---"}
                 </p>
               </div>
 
@@ -103,7 +98,7 @@ export default function CompanyAddressCard() {
                   Código Postal
                 </p>
                 <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                  {addressData?.postalCode ?? "---"}
+                  {companyData?.postalCode ?? "---"}
                 </p>
               </div>
             </div>
@@ -196,11 +191,16 @@ export default function CompanyAddressCard() {
               </div>
             </div>
             <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-              <Button size="sm" variant="outline" onClick={closeModal}>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={closeModal}
+                disabled={isSaving}
+              >
                 Cancelar
               </Button>
-              <Button size="sm" onClick={handleSave}>
-                Salvar Alterações
+              <Button size="sm" onClick={handleSave} disabled={isSaving}>
+                {isSaving ? "Salvando..." : "Salvar Alterações"}
               </Button>
             </div>
           </form>

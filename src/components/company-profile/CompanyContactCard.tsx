@@ -1,55 +1,48 @@
-// src/components/CompanyProfile/CompanyContactCard.tsx
+// frontend/src/components/company-profile/CompanyContactCard.tsx
 import { useModal } from "../../hooks/useModal";
 import { Modal } from "../ui/modal";
 import Button from "../ui/button/Button";
 import Input from "../form/input/InputField";
 import Label from "../form/Label";
 import { useEffect, useState } from "react";
-
-interface ICompanyContact {
-  phone1: string;
-  phone2: string;
-  fax: string;
-  corporativeEmail: string;
-  smtpEmail: string;
-  smtpPassword: string;
-}
-
-// Dados mockados
-const mockContactData: ICompanyContact = {
-  phone1: "+244 222 123 456",
-  phone2: "+244 923 456 789",
-  fax: "+244 222 123 457",
-  corporativeEmail: "rh@minhaempresa.com",
-  smtpEmail: "smtp@minhaempresa.com",
-  smtpPassword: "********",
-};
+import { useCompanyData } from "../../hooks/useCompanyData";
+import toast from "react-hot-toast";
 
 export default function CompanyContactCard() {
   const { isOpen, openModal, closeModal } = useModal();
-  const [contactData, setContactData] = useState<ICompanyContact | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [formData, setFormData] = useState<ICompanyContact | null>(null);
+  const { companyData, loading, updateCompanyData } = useCompanyData();
+  const [formData, setFormData] = useState<Partial<any>>({});
+  const [isSaving, setIsSaving] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setContactData(mockContactData);
-      setFormData(mockContactData);
-      setLoading(false);
-    }, 500);
+    if (companyData) {
+      setFormData({
+        phone1: companyData.phone1 || "",
+        phone2: companyData.phone2 || "",
+        fax: companyData.fax || "",
+        corporativeEmail: companyData.corporativeEmail || "",
+        smtpEmail: companyData.smtpEmail || "",
+        smtpPassword: companyData.smtpPassword || "",
+      });
+    }
+  }, [companyData]);
 
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleInputChange = (field: keyof ICompanyContact, value: string) => {
-    setFormData((prev) => (prev ? { ...prev, [field]: value } : null));
+  const handleInputChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = () => {
-    console.log("Salvando contactos...", formData);
-    setContactData(formData);
-    closeModal();
+  const handleSave = async () => {
+    setIsSaving(true);
+    const result = await updateCompanyData(formData);
+    setIsSaving(false);
+
+    if (result) {
+      toast.success("Contactos atualizados com sucesso!");
+      closeModal();
+    } else {
+      toast.error("Erro ao atualizar contactos");
+    }
   };
 
   if (loading) {
@@ -81,7 +74,7 @@ export default function CompanyContactCard() {
                   Telefone Principal
                 </p>
                 <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                  {contactData?.phone1 ?? "---"}
+                  {companyData?.phone1 ?? "---"}
                 </p>
               </div>
 
@@ -90,7 +83,7 @@ export default function CompanyContactCard() {
                   Telefone Secundário
                 </p>
                 <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                  {contactData?.phone2 ?? "---"}
+                  {companyData?.phone2 ?? "---"}
                 </p>
               </div>
 
@@ -99,7 +92,7 @@ export default function CompanyContactCard() {
                   Fax
                 </p>
                 <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                  {contactData?.fax ?? "---"}
+                  {companyData?.fax ?? "---"}
                 </p>
               </div>
 
@@ -108,7 +101,7 @@ export default function CompanyContactCard() {
                   Email Corporativo
                 </p>
                 <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                  {contactData?.corporativeEmail ?? "---"}
+                  {companyData?.corporativeEmail ?? "---"}
                 </p>
               </div>
 
@@ -117,7 +110,7 @@ export default function CompanyContactCard() {
                   SMTP Email
                 </p>
                 <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                  {contactData?.smtpEmail ?? "---"}
+                  {companyData?.smtpEmail ?? "---"}
                 </p>
               </div>
             </div>
@@ -180,7 +173,7 @@ export default function CompanyContactCard() {
                     onChange={(e) =>
                       handleInputChange("phone2", e.target.value)
                     }
-                    placeholder="+244 923 456 789"
+                    placeholder="+244 923 456 788"
                   />
                 </div>
 
@@ -202,7 +195,7 @@ export default function CompanyContactCard() {
                     onChange={(e) =>
                       handleInputChange("corporativeEmail", e.target.value)
                     }
-                    placeholder="rh@empresa.com"
+                    placeholder="geral@empresa.com"
                   />
                 </div>
 
@@ -214,7 +207,7 @@ export default function CompanyContactCard() {
                     onChange={(e) =>
                       handleInputChange("smtpEmail", e.target.value)
                     }
-                    placeholder="smtp@empresa.com"
+                    placeholder="noreply@empresa.com"
                   />
                 </div>
 
@@ -275,11 +268,16 @@ export default function CompanyContactCard() {
               </div>
             </div>
             <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-              <Button size="sm" variant="outline" onClick={closeModal}>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={closeModal}
+                disabled={isSaving}
+              >
                 Cancelar
               </Button>
-              <Button size="sm" onClick={handleSave}>
-                Salvar Alterações
+              <Button size="sm" onClick={handleSave} disabled={isSaving}>
+                {isSaving ? "Salvando..." : "Salvar Alterações"}
               </Button>
             </div>
           </form>

@@ -6,10 +6,12 @@ import CompanyAddressCard from "../../components/company-profile/CompanyAddressC
 import CompanySocialCard from "../../components/company-profile/CompanySocialCard";
 import CompanyLogoCard from "../../components/company-profile/CompanyLogoCard";
 import PageMeta from "../../components/common/PageMeta";
+import { Toaster } from "react-hot-toast";
 
-export default function companyPprofile() {
+export default function CompanyProfile() {
   return (
     <>
+      <Toaster position="top-right" />
       <PageMeta
         title="Dados da Empresa | Sistema de Gestão de RH"
         description="Gerencie as informações da sua empresa"
