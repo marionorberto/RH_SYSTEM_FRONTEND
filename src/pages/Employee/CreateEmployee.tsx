@@ -7,30 +7,9 @@ import Button from "../../components/ui/button/Button";
 import Input from "../../components/form/input/InputField";
 import Label from "../../components/form/Label";
 import Select from "../../components/form/Select";
-
-// Dados mockados para selects
-const mockNationalities = [
-  { id: "1", name: "Angolana" },
-  { id: "2", name: "Brasileira" },
-  { id: "3", name: "Portuguesa" },
-];
-
-const mockFunctions = [
-  { id: "1", name: "Desenvolvedor Sênior" },
-  { id: "2", name: "Analista de RH" },
-  { id: "3", name: "Analista Financeiro" },
-];
-
-const mockCategories = [
-  { id: "1", name: "Categoria A" },
-  { id: "2", name: "Categoria B" },
-  { id: "3", name: "Categoria C" },
-];
-
-const mockBanks = [
-  { id: "1", name: "Banco Angolano de Investimentos" },
-  { id: "2", name: "Banco de Poupança e Crédito" },
-];
+import { useEmployees } from "../../hooks/useEmployees";
+import { useFormData } from "../../hooks/useFormData";
+import { Toaster } from "react-hot-toast";
 
 const genderOptions = [
   { value: "MASCULINO", label: "Masculino" },
@@ -92,7 +71,14 @@ interface EmployeeFormData {
 
 export default function CreateEmployee() {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const { createEmployee, loading: submitLoading } = useEmployees();
+  const {
+    functions,
+    banks,
+    categories,
+    nationalities,
+    loading: formDataLoading,
+  } = useFormData();
   const [currentSection, setCurrentSection] = useState(1);
   const [formData, setFormData] = useState<EmployeeFormData>({
     employee_name: "",
@@ -125,6 +111,7 @@ export default function CreateEmployee() {
     estado: true,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (field: keyof EmployeeFormData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -137,9 +124,9 @@ export default function CreateEmployee() {
     const newErrors: Record<string, string> = {};
 
     if (section === 1) {
-      if (!formData.employee_name)
+      if (!formData.employee_name.trim())
         newErrors.employee_name = "Nome é obrigatório";
-      if (!formData.motherName)
+      if (!formData.motherName.trim())
         newErrors.motherName = "Nome da mãe é obrigatório";
       if (!formData.birthday)
         newErrors.birthday = "Data de nascimento é obrigatória";
@@ -152,25 +139,63 @@ export default function CreateEmployee() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleNext = () => {
+  const handleNext = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
     if (validateSection(currentSection)) {
       setCurrentSection(currentSection + 1);
+      setErrors({});
     }
   };
 
-  const handlePrevious = () => {
+  const handlePrevious = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
     setCurrentSection(currentSection - 1);
+    setErrors({});
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
 
-    setTimeout(() => {
-      console.log("Funcionário criado:", formData);
-      setLoading(false);
+    if (!validateSection(4)) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    const employeeData = {
+      ...formData,
+      fatherName: formData.fatherName || null,
+      civilState: formData.civilState || null,
+      typeDoc1: formData.typeDoc1 || null,
+      docNumber1: formData.docNumber1 || null,
+      typeDoc2: formData.typeDoc2 || null,
+      docNumber2: formData.docNumber2 || null,
+      academic_level: formData.academic_level || null,
+      telefone2: formData.telefone2 || null,
+      linkedin: formData.linkedin || null,
+      whatsapp: formData.whatsapp || null,
+      instagram: formData.instagram || null,
+      street: formData.street || null,
+      neighbourhood: formData.neighbourhood || null,
+      houseNumber: formData.houseNumber || null,
+      functionId: formData.functionId || null,
+      categoryId: formData.categoryId || null,
+      bankId: formData.bankId || null,
+      numSegsocial: formData.numSegsocial || null,
+      numContaBanc: formData.numContaBanc || null,
+      iBanknta: formData.iBanknta || null,
+    };
+
+    const result = await createEmployee(employeeData);
+    setIsSubmitting(false);
+
+    if (result) {
       navigate("/employees");
-    }, 1500);
+    }
   };
 
   const renderSection = () => {
@@ -181,6 +206,10 @@ export default function CreateEmployee() {
             <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
               Informações Pessoais
             </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+              Preencha os dados pessoais do funcionário. Campos com * são
+              obrigatórios.
+            </p>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
@@ -193,6 +222,11 @@ export default function CreateEmployee() {
                   placeholder="Digite o nome completo"
                   error={!!errors.employee_name}
                 />
+                {errors.employee_name && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.employee_name}
+                  </p>
+                )}
               </div>
               <div>
                 <Label>Nome do Pai</Label>
@@ -214,6 +248,11 @@ export default function CreateEmployee() {
                   placeholder="Digite o nome da mãe"
                   error={!!errors.motherName}
                 />
+                {errors.motherName && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.motherName}
+                  </p>
+                )}
               </div>
               <div>
                 <Label required>Data de Nascimento</Label>
@@ -225,6 +264,9 @@ export default function CreateEmployee() {
                   }
                   error={!!errors.birthday}
                 />
+                {errors.birthday && (
+                  <p className="mt-1 text-sm text-red-600">{errors.birthday}</p>
+                )}
               </div>
               <div>
                 <Label required>Gênero</Label>
@@ -234,6 +276,9 @@ export default function CreateEmployee() {
                   onChange={(value) => handleInputChange("gender", value)}
                   placeholder="Selecione"
                 />
+                {errors.gender && (
+                  <p className="mt-1 text-sm text-red-600">{errors.gender}</p>
+                )}
               </div>
               <div>
                 <Label>Estado Civil</Label>
@@ -247,16 +292,22 @@ export default function CreateEmployee() {
               <div>
                 <Label required>Nacionalidade</Label>
                 <Select
-                  options={mockNationalities.map((n) => ({
+                  options={nationalities.map((n) => ({
                     value: n.id,
-                    label: n.name,
+                    label: n.nomeNacionalidade,
                   }))}
                   value={formData.nationalityId}
                   onChange={(value) =>
                     handleInputChange("nationalityId", value)
                   }
                   placeholder="Selecione"
+                  disabled={formDataLoading}
                 />
+                {errors.nationalityId && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.nationalityId}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -268,6 +319,9 @@ export default function CreateEmployee() {
             <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
               Documentos e Endereço
             </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+              Informações documentais e de endereço (opcionais).
+            </p>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
@@ -357,6 +411,9 @@ export default function CreateEmployee() {
             <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
               Contactos e Redes Sociais
             </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+              Informações de contacto do funcionário.
+            </p>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
@@ -428,42 +485,48 @@ export default function CreateEmployee() {
             <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
               Informações Profissionais e Bancárias
             </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+              Dados contratuais e bancários do funcionário.
+            </p>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <Label>Função</Label>
                 <Select
-                  options={mockFunctions.map((f) => ({
+                  options={functions.map((f) => ({
                     value: f.id,
-                    label: f.name,
+                    label: f.functionName,
                   }))}
                   value={formData.functionId}
                   onChange={(value) => handleInputChange("functionId", value)}
                   placeholder="Selecione"
+                  disabled={formDataLoading}
                 />
               </div>
               <div>
                 <Label>Categoria</Label>
                 <Select
-                  options={mockCategories.map((c) => ({
+                  options={categories.map((c) => ({
                     value: c.id,
-                    label: c.name,
+                    label: c.categoryName,
                   }))}
                   value={formData.categoryId}
                   onChange={(value) => handleInputChange("categoryId", value)}
                   placeholder="Selecione"
+                  disabled={formDataLoading}
                 />
               </div>
               <div>
                 <Label>Banco</Label>
                 <Select
-                  options={mockBanks.map((b) => ({
+                  options={banks.map((b) => ({
                     value: b.id,
-                    label: b.name,
+                    label: `${b.bank_name} (${b.sigla})`,
                   }))}
                   value={formData.bankId}
                   onChange={(value) => handleInputChange("bankId", value)}
                   placeholder="Selecione"
+                  disabled={formDataLoading}
                 />
               </div>
               <div>
@@ -497,16 +560,18 @@ export default function CreateEmployee() {
                 />
               </div>
               <div className="sm:col-span-2">
-                <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer">
+                <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50">
                   <input
                     type="checkbox"
                     checked={formData.estado}
                     onChange={(e) =>
                       handleInputChange("estado", e.target.checked)
                     }
-                    className="w-4 h-4"
+                    className="w-4 h-4 text-blue-600 rounded"
                   />
-                  <span className="text-sm">Funcionário Ativo</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                    Funcionário Ativo
+                  </span>
                 </label>
               </div>
             </div>
@@ -518,8 +583,28 @@ export default function CreateEmployee() {
     }
   };
 
+  const loading = isSubmitting || submitLoading || formDataLoading;
+
+  if (formDataLoading && currentSection === 1) {
+    return (
+      <>
+        <PageMeta title="Criar Funcionário | Sistema RH" />
+        <PageBreadcrumb pageTitle="Criar Funcionário" />
+        <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Carregando dados do formulário...</p>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
+      <Toaster position="top-right" />
       <PageMeta title="Criar Funcionário | Sistema RH" />
       <PageBreadcrumb pageTitle="Criar Funcionário" />
 
@@ -529,15 +614,22 @@ export default function CreateEmployee() {
           <div className="flex items-center justify-between">
             {[1, 2, 3, 4].map((step) => (
               <div key={step} className="flex-1 text-center">
-                <div
-                  className={`w-8 h-8 mx-auto rounded-full flex items-center justify-center text-sm font-medium ${
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (step < currentSection) {
+                      setCurrentSection(step);
+                    }
+                  }}
+                  className={`w-8 h-8 mx-auto rounded-full flex items-center justify-center text-sm font-medium transition-all ${
                     currentSection >= step
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-200 text-gray-500 dark:bg-gray-700"
+                      ? "bg-blue-600 text-white cursor-pointer hover:bg-blue-700"
+                      : "bg-gray-200 text-gray-500 dark:bg-gray-700 cursor-not-allowed"
                   }`}
+                  disabled={step > currentSection}
                 >
                   {step}
-                </div>
+                </button>
                 <p className="mt-2 text-xs text-gray-500">
                   {step === 1 && "Pessoal"}
                   {step === 2 && "Documentos"}
@@ -558,6 +650,7 @@ export default function CreateEmployee() {
               size="md"
               variant="outline"
               onClick={() => navigate("/employees")}
+              disabled={loading}
             >
               Cancelar
             </Button>
@@ -568,6 +661,7 @@ export default function CreateEmployee() {
                   size="md"
                   variant="outline"
                   onClick={handlePrevious}
+                  disabled={loading}
                 >
                   Anterior
                 </Button>
@@ -578,6 +672,7 @@ export default function CreateEmployee() {
                   size="md"
                   variant="primary"
                   onClick={handleNext}
+                  disabled={loading}
                 >
                   Próximo
                 </Button>

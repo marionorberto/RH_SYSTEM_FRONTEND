@@ -35,7 +35,7 @@ export default function DepartamentList() {
   };
 
   const handleCreate = () => {
-    navigate("/departaments/create");
+    navigate("/dashboard/departaments/create");
   };
 
   return (

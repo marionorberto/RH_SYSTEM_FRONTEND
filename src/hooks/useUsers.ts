@@ -15,7 +15,6 @@ interface UseUsersReturn {
   statusFilter: string;
   setStatusFilter: (status: string) => void;
   fetchUsers: () => Promise<void>;
-  refreshUsers: () => Promise<void>;
   createUser: (data: ICreateUserData) => Promise<IUser | null>;
   updateUser: (data: IUpdateUserData) => Promise<IUser | null>;
   deleteUser: (id: string) => Promise<boolean>;
@@ -46,12 +45,9 @@ export const useUsers = (): UseUsersReturn => {
       setError(null);
       const data = await userService.getAllUsers();
       
-      // Normalizar os dados dos usuários
       const normalizedUsers = (data || []).map(user => ({
         ...user,
-        // Garantir que o role está em minúsculo para comparação consistente
         role: user.role?.toLowerCase() || 'funcionario',
-        // Criar nome completo para busca
         fullName: `${user.firstname} ${user.lastname}`.toLowerCase(),
       }));
       
@@ -64,10 +60,6 @@ export const useUsers = (): UseUsersReturn => {
       setLoading(false);
     }
   }, []);
-
-  const refreshUsers = useCallback(async () => {
-    await fetchUsers();
-  }, [fetchUsers]);
 
   const createUser = useCallback(async (data: ICreateUserData): Promise<IUser | null> => {
     try {
@@ -157,7 +149,6 @@ export const useUsers = (): UseUsersReturn => {
   useEffect(() => {
     let filtered = [...users];
 
-    // Filtro de busca - usando nome completo, email ou username
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
       filtered = filtered.filter(
@@ -168,7 +159,6 @@ export const useUsers = (): UseUsersReturn => {
       );
     }
 
-    // Filtro de role - comparando em minúsculo
     if (roleFilter !== 'all') {
       filtered = filtered.filter((user) => {
         const userRole = user.role?.toLowerCase();
@@ -177,7 +167,6 @@ export const useUsers = (): UseUsersReturn => {
       });
     }
 
-    // Filtro de status
     if (statusFilter !== 'all') {
       filtered = filtered.filter((user) =>
         statusFilter === 'active' ? user.active : !user.active
@@ -213,7 +202,6 @@ export const useUsers = (): UseUsersReturn => {
     statusFilter,
     setStatusFilter,
     fetchUsers,
-    refreshUsers,
     createUser,
     updateUser,
     deleteUser,

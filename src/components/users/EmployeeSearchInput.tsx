@@ -1,95 +1,16 @@
-// src/components/Users/EmployeeSearchInput.tsx
+// frontend/src/components/users/EmployeeSearchInput.tsx
 import { useState, useEffect, useRef } from "react";
+import { useEmployees } from "../../hooks/useEmployees";
 
-// Interface baseada na entidade Employee
 interface Employee {
   id: string;
-  nomeFuncionario: string;
-  nomePai: string;
-  nomeMae: string;
-  dataNascimento: string;
-  genero: string;
-  estadoCivil: string;
-  telefone1: string;
+  employee_name: string;
   email: string;
-  cargo: string;
-  departamento: string;
-  active: boolean;
+  function?: { functionName: string };
+  departamento?: string;
+  telefone1: string;
+  hasUser: boolean;
 }
-
-// Dados mockados de funcionários
-const mockEmployees: Employee[] = [
-  {
-    id: "1",
-    nomeFuncionario: "João Silva",
-    nomePai: "Antonio Silva",
-    nomeMae: "Maria Silva",
-    dataNascimento: "1990-05-15",
-    genero: "MASCULINO",
-    estadoCivil: "CASADO(A)",
-    telefone1: "+244 923 456 789",
-    email: "joao.silva@empresa.com",
-    cargo: "Desenvolvedor Sênior",
-    departamento: "Tecnologia",
-    active: true,
-  },
-  {
-    id: "2",
-    nomeFuncionario: "Maria Santos",
-    nomePai: "José Santos",
-    nomeMae: "Ana Santos",
-    dataNascimento: "1988-08-22",
-    genero: "FEMININO",
-    estadoCivil: "SOLTEIRO(A)",
-    telefone1: "+244 923 456 788",
-    email: "maria.santos@empresa.com",
-    cargo: "Analista de RH",
-    departamento: "Recursos Humanos",
-    active: true,
-  },
-  {
-    id: "3",
-    nomeFuncionario: "Carlos Oliveira",
-    nomePai: "Roberto Oliveira",
-    nomeMae: "Carla Oliveira",
-    dataNascimento: "1995-03-10",
-    genero: "MASCULINO",
-    estadoCivil: "SOLTEIRO(A)",
-    telefone1: "+244 923 456 787",
-    email: "carlos.oliveira@empresa.com",
-    cargo: "Analista Financeiro",
-    departamento: "Financeiro",
-    active: true,
-  },
-  {
-    id: "4",
-    nomeFuncionario: "Ana Costa",
-    nomePai: "Paulo Costa",
-    nomeMae: "Lucia Costa",
-    dataNascimento: "1992-11-30",
-    genero: "FEMININO",
-    estadoCivil: "CASADO(A)",
-    telefone1: "+244 923 456 786",
-    email: "ana.costa@empresa.com",
-    cargo: "Coordenadora Comercial",
-    departamento: "Comercial",
-    active: true,
-  },
-  {
-    id: "5",
-    nomeFuncionario: "Pedro Almeida",
-    nomePai: "Fernando Almeida",
-    nomeMae: "Isabel Almeida",
-    dataNascimento: "1985-07-19",
-    genero: "MASCULINO",
-    estadoCivil: "CASADO(A)",
-    telefone1: "+244 923 456 785",
-    email: "pedro.almeida@empresa.com",
-    cargo: "CTO",
-    departamento: "Tecnologia",
-    active: true,
-  },
-];
 
 interface EmployeeSearchInputProps {
   onSelect: (employee: Employee | null) => void;
@@ -100,7 +21,7 @@ interface EmployeeSearchInputProps {
 export default function EmployeeSearchInput({
   onSelect,
   error,
-  placeholder = "Buscar funcionário por nome, email ou cargo...",
+  placeholder = "Buscar funcionário sem usuário por nome, email ou função...",
 }: EmployeeSearchInputProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
@@ -109,6 +30,13 @@ export default function EmployeeSearchInput({
     null,
   );
   const wrapperRef = useRef<HTMLDivElement>(null);
+
+  const { employeesWithoutUser, loading, fetchEmployeesWithoutUser } =
+    useEmployees();
+
+  useEffect(() => {
+    fetchEmployeesWithoutUser();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -124,15 +52,14 @@ export default function EmployeeSearchInput({
   }, []);
 
   useEffect(() => {
-    if (searchTerm.length > 1) {
-      const filtered = mockEmployees.filter(
+    if (searchTerm.length > 1 && employeesWithoutUser.length > 0) {
+      const filtered = employeesWithoutUser.filter(
         (emp) =>
-          emp.nomeFuncionario
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          emp.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          emp.cargo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          emp.departamento.toLowerCase().includes(searchTerm.toLowerCase()),
+          emp.employee_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          emp.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          emp.function?.functionName
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase()),
       );
       setFilteredEmployees(filtered);
       setShowDropdown(true);
@@ -140,11 +67,11 @@ export default function EmployeeSearchInput({
       setFilteredEmployees([]);
       setShowDropdown(false);
     }
-  }, [searchTerm]);
+  }, [searchTerm, employeesWithoutUser]);
 
   const handleSelectEmployee = (employee: Employee) => {
     setSelectedEmployee(employee);
-    setSearchTerm(employee.nomeFuncionario);
+    setSearchTerm(employee.employee_name);
     setShowDropdown(false);
     onSelect(employee);
   };
@@ -156,6 +83,14 @@ export default function EmployeeSearchInput({
     onSelect(null);
   };
 
+  if (loading) {
+    return (
+      <div className="p-3 bg-gray-50 rounded-lg">
+        <p className="text-sm text-gray-500">Carregando funcionários...</p>
+      </div>
+    );
+  }
+
   return (
     <div ref={wrapperRef} className="relative">
       {selectedEmployee ? (
@@ -163,13 +98,11 @@ export default function EmployeeSearchInput({
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <p className="font-medium text-gray-800 dark:text-white/90">
-                {selectedEmployee.nomeFuncionario}
+                {selectedEmployee.employee_name}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                {selectedEmployee.cargo} • {selectedEmployee.departamento}
-              </p>
-              <p className="text-xs text-gray-400 dark:text-gray-500">
-                {selectedEmployee.email} • {selectedEmployee.telefone1}
+                {selectedEmployee.function?.functionName || "Sem função"} •{" "}
+                {selectedEmployee.email || "Sem email"}
               </p>
             </div>
             <button
@@ -215,13 +148,13 @@ export default function EmployeeSearchInput({
                   className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-0 transition-colors"
                 >
                   <div className="font-medium text-gray-800 dark:text-white/90">
-                    {employee.nomeFuncionario}
+                    {employee.employee_name}
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {employee.cargo} • {employee.departamento}
+                    {employee.function?.functionName || "Sem função"}
                   </div>
                   <div className="text-xs text-gray-400 dark:text-gray-500">
-                    {employee.email}
+                    {employee.email || "Sem email"}
                   </div>
                 </button>
               ))}
@@ -232,10 +165,10 @@ export default function EmployeeSearchInput({
             searchTerm.length > 1 && (
               <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg dark:bg-gray-800 dark:border-gray-700 p-4 text-center">
                 <p className="text-sm text-gray-500">
-                  Nenhum funcionário encontrado
+                  Nenhum funcionário disponível para criar usuário
                 </p>
                 <p className="text-xs text-gray-400 mt-1">
-                  Tente buscar por nome, email ou cargo
+                  Apenas funcionários sem usuário são exibidos
                 </p>
               </div>
             )}

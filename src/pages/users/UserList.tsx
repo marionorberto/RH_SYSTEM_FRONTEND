@@ -64,7 +64,7 @@ export default function UserList() {
   };
 
   const handleCreate = () => {
-    navigate("/users/create");
+    navigate("/dashboard/users/create");
   };
 
   // Encontrar nome do usuário para o modal

@@ -41,7 +41,7 @@ export default function FunctionList() {
   };
 
   const handleCreate = () => {
-    navigate("/functions/create");
+    navigate("/dashboard/functions/create");
   };
 
   // Estatísticas
