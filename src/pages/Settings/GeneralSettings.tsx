@@ -6,78 +6,74 @@ import Button from "../../components/ui/button/Button";
 import Input from "../../components/form/input/InputField";
 import Label from "../../components/form/Label";
 import Switch from "../../components/ui/switch/Switch";
-
-// Dados mockados
-const mockSettings = {
-  // Configurações Gerais
-  companyName: "Sistema RH Empresarial",
-  companyLogo: null,
-  companyEmail: "contato@rhsistema.com",
-  companyPhone: "+244 923 456 789",
-  timezone: "Africa/Luanda",
-  dateFormat: "DD/MM/YYYY",
-  language: "pt-BR",
-
-  // Configurações de Notificação
-  emailNotifications: true,
-  emailHost: "smtp.gmail.com",
-  emailPort: "587",
-  emailUser: "noreply@rhsistema.com",
-  emailPassword: "********",
-  emailSecure: true,
-
-  // Configurações de Segurança
-  sessionTimeout: 30,
-  maxLoginAttempts: 5,
-  passwordExpiryDays: 90,
-  twoFactorAuth: false,
-  requireStrongPassword: true,
-
-  // Configurações de Backup
-  autoBackup: true,
-  backupFrequency: "daily",
-  backupTime: "02:00",
-  backupRetention: 30,
-
-  // Configurações de Interface
-  theme: "light",
-  sidebarCollapsed: false,
-  animationsEnabled: true,
-  itemsPerPage: 10,
-};
+import { useAppSettings } from "../../hooks/useAppSettings";
+import { useUserSettings } from "../../hooks/useUserSettings";
+import { Toaster } from "react-hot-toast";
 
 export default function GeneralSettings() {
-  const [settings, setSettings] = useState(mockSettings);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("general");
-  const [saving, setSaving] = useState(false);
+  const {
+    settings: appSettings,
+    loading: appLoading,
+    saving: appSaving,
+    updateSettings: updateAppSettings,
+  } = useAppSettings();
+
+  const {
+    settings: userSettings,
+    loading: userLoading,
+    saving: userSaving,
+    updateSettings: updateUserSettings,
+  } = useUserSettings();
+
+  const [localAppSettings, setLocalAppSettings] = useState<any>(null);
+  const [localUserSettings, setLocalUserSettings] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState("notifications");
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 500);
-    return () => clearTimeout(timer);
-  }, []);
+    if (appSettings) {
+      setLocalAppSettings(appSettings);
+    }
+  }, [appSettings]);
 
-  const handleInputChange = (key: string, value: any) => {
-    setSettings((prev) => ({ ...prev, [key]: value }));
+  useEffect(() => {
+    if (userSettings) {
+      setLocalUserSettings(userSettings);
+    }
+  }, [userSettings]);
+
+  const handleAppChange = (key: string, value: any) => {
+    setLocalAppSettings((prev: any) => ({ ...prev, [key]: value }));
   };
 
-  const handleSave = () => {
-    setSaving(true);
-    setTimeout(() => {
-      setSaving(false);
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
-    }, 1000);
+  const handleUserChange = (key: string, value: any) => {
+    setLocalUserSettings((prev: any) => ({ ...prev, [key]: value }));
+  };
+
+  const handleSave = async () => {
+    // Salvar configurações globais (AppSettings)
+    if (localAppSettings) {
+      await updateAppSettings(localAppSettings);
+    }
+
+    // Salvar configurações do usuário (UserSettings)
+    if (localUserSettings) {
+      await updateUserSettings(localUserSettings);
+    }
+
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 3000);
   };
 
   const tabs = [
-    { id: "general", name: "Gerais", icon: "⚙️" },
     { id: "notifications", name: "Notificações", icon: "📧" },
     { id: "security", name: "Segurança", icon: "🔒" },
     { id: "backup", name: "Backup", icon: "💾" },
     { id: "interface", name: "Interface", icon: "🎨" },
   ];
+
+  const loading = appLoading || userLoading;
+  const saving = appSaving || userSaving;
 
   if (loading) {
     return (
@@ -98,6 +94,7 @@ export default function GeneralSettings() {
 
   return (
     <>
+      <Toaster position="top-right" />
       <PageMeta
         title="Configurações Gerais | Sistema de Gestão de RH"
         description="Configurações gerais da aplicação"
@@ -145,161 +142,126 @@ export default function GeneralSettings() {
             </div>
 
             <div className="space-y-6">
-              {/* Tab Geral */}
-              {activeTab === "general" && (
-                <>
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div>
-                      <Label>Nome da Empresa</Label>
-                      <Input
-                        value={settings.companyName}
-                        onChange={(e) =>
-                          handleInputChange("companyName", e.target.value)
-                        }
-                      />
-                    </div>
-                    <div>
-                      <Label>Email da Empresa</Label>
-                      <Input
-                        type="email"
-                        value={settings.companyEmail}
-                        onChange={(e) =>
-                          handleInputChange("companyEmail", e.target.value)
-                        }
-                      />
-                    </div>
-                    <div>
-                      <Label>Telefone</Label>
-                      <Input
-                        value={settings.companyPhone}
-                        onChange={(e) =>
-                          handleInputChange("companyPhone", e.target.value)
-                        }
-                      />
-                    </div>
-                    <div>
-                      <Label>Fuso Horário</Label>
-                      <select
-                        value={settings.timezone}
-                        onChange={(e) =>
-                          handleInputChange("timezone", e.target.value)
-                        }
-                        className="w-full px-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
-                      >
-                        <option value="Africa/Luanda">Africa/Luanda</option>
-                        <option value="Africa/Lagos">Africa/Lagos</option>
-                        <option value="America/Sao_Paulo">
-                          America/Sao_Paulo
-                        </option>
-                        <option value="Europe/Lisbon">Europe/Lisbon</option>
-                      </select>
-                    </div>
-                    <div>
-                      <Label>Formato de Data</Label>
-                      <select
-                        value={settings.dateFormat}
-                        onChange={(e) =>
-                          handleInputChange("dateFormat", e.target.value)
-                        }
-                        className="w-full px-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
-                      >
-                        <option value="DD/MM/YYYY">DD/MM/YYYY</option>
-                        <option value="MM/DD/YYYY">MM/DD/YYYY</option>
-                        <option value="YYYY-MM-DD">YYYY-MM-DD</option>
-                      </select>
-                    </div>
-                    <div>
-                      <Label>Idioma</Label>
-                      <select
-                        value={settings.language}
-                        onChange={(e) =>
-                          handleInputChange("language", e.target.value)
-                        }
-                        className="w-full px-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
-                      >
-                        <option value="pt-BR">Português (BR)</option>
-                        <option value="pt-PT">Português (PT)</option>
-                        <option value="en-US">English (US)</option>
-                        <option value="es-ES">Español</option>
-                      </select>
-                    </div>
-                  </div>
-                </>
-              )}
-
               {/* Tab Notificações */}
-              {activeTab === "notifications" && (
-                <>
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="font-medium">Notificações por Email</p>
-                      <p className="text-sm text-gray-500">
-                        Enviar notificações via email para os usuários
-                      </p>
-                    </div>
-                    <Switch
-                      checked={settings.emailNotifications}
-                      onChange={(checked) =>
-                        handleInputChange("emailNotifications", checked)
-                      }
-                    />
-                  </div>
+              {activeTab === "notifications" &&
+                localAppSettings &&
+                localUserSettings && (
+                  <>
+                    {/* Preferências do Usuário - Notificações */}
+                    <div className="border-b border-gray-200 dark:border-gray-700 pb-4 mb-4">
+                      <h4 className="text-md font-medium text-gray-700 dark:text-gray-300 mb-3">
+                        Minhas Preferências
+                      </h4>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                          <div>
+                            <p className="font-medium">
+                              Notificações por Email
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              Receber notificações no meu email
+                            </p>
+                          </div>
+                          <Switch
+                            checked={localUserSettings.emailNotifications}
+                            onChange={(checked) =>
+                              handleUserChange("emailNotifications", checked)
+                            }
+                          />
+                        </div>
 
-                  {settings.emailNotifications && (
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div>
-                        <Label>SMTP Host</Label>
-                        <Input
-                          value={settings.emailHost}
-                          onChange={(e) =>
-                            handleInputChange("emailHost", e.target.value)
-                          }
-                        />
-                      </div>
-                      <div>
-                        <Label>SMTP Porta</Label>
-                        <Input
-                          value={settings.emailPort}
-                          onChange={(e) =>
-                            handleInputChange("emailPort", e.target.value)
-                          }
-                        />
-                      </div>
-                      <div>
-                        <Label>Usuário SMTP</Label>
-                        <Input
-                          value={settings.emailUser}
-                          onChange={(e) =>
-                            handleInputChange("emailUser", e.target.value)
-                          }
-                        />
-                      </div>
-                      <div>
-                        <Label>Senha SMTP</Label>
-                        <Input
-                          type="password"
-                          value={settings.emailPassword}
-                          onChange={(e) =>
-                            handleInputChange("emailPassword", e.target.value)
-                          }
-                        />
+                        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                          <div>
+                            <p className="font-medium">Notificações Push</p>
+                            <p className="text-sm text-gray-500">
+                              Receber notificações push no navegador
+                            </p>
+                          </div>
+                          <Switch
+                            checked={localUserSettings.pushNotifications}
+                            onChange={(checked) =>
+                              handleUserChange("pushNotifications", checked)
+                            }
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                          <div>
+                            <p className="font-medium">Notificações Desktop</p>
+                            <p className="text-sm text-gray-500">
+                              Receber notificações do sistema
+                            </p>
+                          </div>
+                          <Switch
+                            checked={localUserSettings.desktopNotifications}
+                            onChange={(checked) =>
+                              handleUserChange("desktopNotifications", checked)
+                            }
+                          />
+                        </div>
                       </div>
                     </div>
-                  )}
-                </>
-              )}
+
+                    {/* Configurações Globais de Email */}
+                    <div>
+                      <h4 className="text-md font-medium text-gray-700 dark:text-gray-300 mb-3">
+                        Configurações de Email (Sistema)
+                      </h4>
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                          <Label>SMTP Host</Label>
+                          <Input
+                            value={localAppSettings.emailHost || ""}
+                            onChange={(e) =>
+                              handleAppChange("emailHost", e.target.value)
+                            }
+                          />
+                        </div>
+                        <div>
+                          <Label>SMTP Porta</Label>
+                          <Input
+                            value={localAppSettings.emailPort || ""}
+                            onChange={(e) =>
+                              handleAppChange("emailPort", e.target.value)
+                            }
+                          />
+                        </div>
+                        <div>
+                          <Label>Usuário SMTP</Label>
+                          <Input
+                            value={localAppSettings.emailUser || ""}
+                            onChange={(e) =>
+                              handleAppChange("emailUser", e.target.value)
+                            }
+                          />
+                        </div>
+                        <div>
+                          <Label>Senha SMTP</Label>
+                          <Input
+                            type="password"
+                            value={localAppSettings.emailPassword || ""}
+                            onChange={(e) =>
+                              handleAppChange("emailPassword", e.target.value)
+                            }
+                            placeholder="••••••••"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
 
               {/* Tab Segurança */}
-              {activeTab === "security" && (
+              {activeTab === "security" && localAppSettings && (
                 <>
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                       <Label>Tempo de Sessão (minutos)</Label>
                       <Input
                         type="number"
-                        value={settings.sessionTimeout}
+                        value={localAppSettings.sessionTimeout}
                         onChange={(e) =>
-                          handleInputChange(
+                          handleAppChange(
                             "sessionTimeout",
                             parseInt(e.target.value),
                           )
@@ -310,9 +272,9 @@ export default function GeneralSettings() {
                       <Label>Máx. Tentativas de Login</Label>
                       <Input
                         type="number"
-                        value={settings.maxLoginAttempts}
+                        value={localAppSettings.maxLoginAttempts}
                         onChange={(e) =>
-                          handleInputChange(
+                          handleAppChange(
                             "maxLoginAttempts",
                             parseInt(e.target.value),
                           )
@@ -323,9 +285,9 @@ export default function GeneralSettings() {
                       <Label>Expiração de Senha (dias)</Label>
                       <Input
                         type="number"
-                        value={settings.passwordExpiryDays}
+                        value={localAppSettings.passwordExpiryDays}
                         onChange={(e) =>
-                          handleInputChange(
+                          handleAppChange(
                             "passwordExpiryDays",
                             parseInt(e.target.value),
                           )
@@ -345,9 +307,9 @@ export default function GeneralSettings() {
                         </p>
                       </div>
                       <Switch
-                        checked={settings.twoFactorAuth}
+                        checked={localAppSettings.twoFactorAuth}
                         onChange={(checked) =>
-                          handleInputChange("twoFactorAuth", checked)
+                          handleAppChange("twoFactorAuth", checked)
                         }
                       />
                     </div>
@@ -361,9 +323,9 @@ export default function GeneralSettings() {
                         </p>
                       </div>
                       <Switch
-                        checked={settings.requireStrongPassword}
+                        checked={localAppSettings.requireStrongPassword}
                         onChange={(checked) =>
-                          handleInputChange("requireStrongPassword", checked)
+                          handleAppChange("requireStrongPassword", checked)
                         }
                       />
                     </div>
@@ -372,7 +334,7 @@ export default function GeneralSettings() {
               )}
 
               {/* Tab Backup */}
-              {activeTab === "backup" && (
+              {activeTab === "backup" && localAppSettings && (
                 <>
                   <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                     <div>
@@ -382,21 +344,21 @@ export default function GeneralSettings() {
                       </p>
                     </div>
                     <Switch
-                      checked={settings.autoBackup}
+                      checked={localAppSettings.autoBackup}
                       onChange={(checked) =>
-                        handleInputChange("autoBackup", checked)
+                        handleAppChange("autoBackup", checked)
                       }
                     />
                   </div>
 
-                  {settings.autoBackup && (
+                  {localAppSettings.autoBackup && (
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div>
                         <Label>Frequência</Label>
                         <select
-                          value={settings.backupFrequency}
+                          value={localAppSettings.backupFrequency}
                           onChange={(e) =>
-                            handleInputChange("backupFrequency", e.target.value)
+                            handleAppChange("backupFrequency", e.target.value)
                           }
                           className="w-full px-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
                         >
@@ -409,9 +371,9 @@ export default function GeneralSettings() {
                         <Label>Horário</Label>
                         <Input
                           type="time"
-                          value={settings.backupTime}
+                          value={localAppSettings.backupTime}
                           onChange={(e) =>
-                            handleInputChange("backupTime", e.target.value)
+                            handleAppChange("backupTime", e.target.value)
                           }
                         />
                       </div>
@@ -419,9 +381,9 @@ export default function GeneralSettings() {
                         <Label>Retenção (dias)</Label>
                         <Input
                           type="number"
-                          value={settings.backupRetention}
+                          value={localAppSettings.backupRetention}
                           onChange={(e) =>
-                            handleInputChange(
+                            handleAppChange(
                               "backupRetention",
                               parseInt(e.target.value),
                             )
@@ -446,15 +408,15 @@ export default function GeneralSettings() {
               )}
 
               {/* Tab Interface */}
-              {activeTab === "interface" && (
+              {activeTab === "interface" && localUserSettings && (
                 <>
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                       <Label>Tema</Label>
                       <select
-                        value={settings.theme}
+                        value={localUserSettings.theme}
                         onChange={(e) =>
-                          handleInputChange("theme", e.target.value)
+                          handleUserChange("theme", e.target.value)
                         }
                         className="w-full px-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
                       >
@@ -464,11 +426,26 @@ export default function GeneralSettings() {
                       </select>
                     </div>
                     <div>
+                      <Label>Idioma</Label>
+                      <select
+                        value={localUserSettings.language}
+                        onChange={(e) =>
+                          handleUserChange("language", e.target.value)
+                        }
+                        className="w-full px-4 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
+                      >
+                        <option value="pt-BR">Português (Brasil)</option>
+                        <option value="pt-PT">Português (Portugal)</option>
+                        <option value="en-US">English (US)</option>
+                        <option value="es">Español</option>
+                      </select>
+                    </div>
+                    <div>
                       <Label>Itens por Página</Label>
                       <select
-                        value={settings.itemsPerPage}
+                        value={localUserSettings.itemsPerPage}
                         onChange={(e) =>
-                          handleInputChange(
+                          handleUserChange(
                             "itemsPerPage",
                             parseInt(e.target.value),
                           )
@@ -492,9 +469,9 @@ export default function GeneralSettings() {
                         </p>
                       </div>
                       <Switch
-                        checked={settings.sidebarCollapsed}
+                        checked={localUserSettings.sidebarCollapsed}
                         onChange={(checked) =>
-                          handleInputChange("sidebarCollapsed", checked)
+                          handleUserChange("sidebarCollapsed", checked)
                         }
                       />
                     </div>
@@ -507,9 +484,9 @@ export default function GeneralSettings() {
                         </p>
                       </div>
                       <Switch
-                        checked={settings.animationsEnabled}
+                        checked={localUserSettings.animationsEnabled}
                         onChange={(checked) =>
-                          handleInputChange("animationsEnabled", checked)
+                          handleUserChange("animationsEnabled", checked)
                         }
                       />
                     </div>
